@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="HttpProxy"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/home/slayer/workspace/HttpProxy/build"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/ninja -v all"/>
+					<CompileFile command="/usr/bin/ninja -v &quot;$file&quot;"/>
+					<Clean command="/usr/bin/ninja -v clean"/>
+					<DistClean command="/usr/bin/ninja -v clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/home/slayer/workspace/HttpProxy/build"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/ninja -v rebuild_cache"/>
+					<CompileFile command="/usr/bin/ninja -v &quot;$file&quot;"/>
+					<Clean command="/usr/bin/ninja -v clean"/>
+					<DistClean command="/usr/bin/ninja -v clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="HttpProxy">
+				<Option output="/home/slayer/workspace/HttpProxy/build/HttpProxy" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/slayer/workspace/HttpProxy/build"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/home/slayer/workspace/HttpProxy/src"/>
+					<Add directory="/home/slayer/workspace/HttpProxy/src/utils"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/ninja -v HttpProxy"/>
+					<CompileFile command="/usr/bin/ninja -v &quot;$file&quot;"/>
+					<Clean command="/usr/bin/ninja -v clean"/>
+					<DistClean command="/usr/bin/ninja -v clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="HttpProxy/fast">
+				<Option output="/home/slayer/workspace/HttpProxy/build/HttpProxy" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/home/slayer/workspace/HttpProxy/build"/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/home/slayer/workspace/HttpProxy/src"/>
+					<Add directory="/home/slayer/workspace/HttpProxy/src/utils"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/x86_64-pc-linux-gnu"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/../../../../include/c++/9.2.0/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/lib/gcc/x86_64-pc-linux-gnu/9.2.0/include-fixed"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/ninja -v HttpProxy/fast"/>
+					<CompileFile command="/usr/bin/ninja -v &quot;$file&quot;"/>
+					<Clean command="/usr/bin/ninja -v clean"/>
+					<DistClean command="/usr/bin/ninja -v clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/home/slayer/workspace/HttpProxy/build"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/ninja -v edit_cache"/>
+					<CompileFile command="/usr/bin/ninja -v &quot;$file&quot;"/>
+					<Clean command="/usr/bin/ninja -v clean"/>
+					<DistClean command="/usr/bin/ninja -v clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/conf.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/conf.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/connhandler.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/connhandler.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/conninfo.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/conninfo.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/connmanager.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/connmanager.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/connreceiver.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/connreceiver.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/epollrepertory.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/epollrepertory.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/epollserver.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/epollserver.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/main.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/request.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/request.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/requesthandler.cpp">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/requesthandler.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/requestparser.cc">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/requestparser.h">
+			<Option target="HttpProxy"/>
+		</Unit>
+		<Unit filename="/home/slayer/workspace/HttpProxy/src/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
