@@ -4,7 +4,9 @@ namespace msystem {
 
 ConfigPool* ConfigPool::config_pool_ = nullptr;
 
-ConfigPool::ConfigPool() {
+ConfigPool::ConfigPool()
+    : port(0),
+      idletimeout(60) {
 
 }
 

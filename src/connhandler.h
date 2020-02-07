@@ -21,6 +21,7 @@ class ConnHandler : public std::enable_shared_from_this<ConnHandler>  {
   void ReadFromServer();
   void WriteToClient();
   void ReadFromClient();
+  void CheckDeadline();
   void Stop();
   ~ConnHandler();
  private:
@@ -35,6 +36,8 @@ class ConnHandler : public std::enable_shared_from_this<ConnHandler>  {
   RequestParser request_parser_;
   RequestHandler request_handler_;
   ConnManager& conn_manager_;
+  asio::steady_timer deadline_;
+  uint8_t stopped_;
 };
 }
 

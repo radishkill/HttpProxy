@@ -13,7 +13,10 @@ namespace asio = boost::asio;
  */
 class ConnInfo {
  public:
-  ConnInfo(asio::ip::tcp::socket c_socket);
+  ConnInfo(const ConnInfo&) = delete;
+  ConnInfo& operator=(const ConnInfo&) = delete;
+
+  explicit ConnInfo(asio::ip::tcp::socket c_socket);
 
   asio::ip::tcp::socket client_socket;
   asio::ip::tcp::socket server_socket;

@@ -91,7 +91,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "3"
+			"value" : "4"
 		},
 		{
 			"name" : "CMAKE_CODEBLOCKS_COMPILER_ID",
@@ -743,7 +743,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "/usr"
+			"value" : ""
 		},
 		{
 			"name" : "CMAKE_PROJECT_DESCRIPTION",
@@ -1127,7 +1127,7 @@
 				}
 			],
 			"type" : "STRING",
-			"value" : "/usr/bin/qmake"
+			"value" : ""
 		}
 	],
 	"kind" : "cache",

@@ -37,6 +37,13 @@ int process_cmd(int ac, char **av) {
   config.add_options()
       ("port", po::value<uint16_t>(), "listen port")
       ("listen", po::value<std::string>(), "listen address")
+      ("upstream", po::value<std::string>(), "")
+      ("timeout", po::value<uint32_t>()->default_value(60), "")
+      ("bindsame", po::bool_switch()->default_value(false), "")
+      ("filter", po::value<std::string>(), "")
+      ("filterURLs", po::bool_switch()->default_value(false), "")
+      ("filterextended", po::bool_switch()->default_value(false), "")
+      ("filtercasesensitive", po::bool_switch()->default_value(false), "")
       ;
   po::variables_map vm;
   po::store(po::parse_command_line(ac, av, general_options), vm);
@@ -50,28 +57,52 @@ int process_cmd(int ac, char **av) {
     cout << "develop version" << endl;
     return -1;
   }
+  if (vm.count("listen")) {
+    config_pool->listen_addrs.push_back(vm["listen"].as<std::string>());
+  }
+  if (vm.count("port")) {
+    config_pool->port = vm["port"].as<uint16_t>();
+  }
 
   std::ifstream ifs(config_pool->config_file.c_str());
   if (!ifs) {
-    std::string err = "can not open config file: ";
-    err += config_pool->config_file;
-    throw  err;
+    throw  std::string("can not open config file: ") + config_pool->config_file;
   } else {
     po::store(po::parse_config_file(ifs, config), vm);
     po::notify(vm);
     ifs.close();
   }
 
-  if (vm.count("listen")) {
+  if (config_pool->listen_addrs.size() == 0 && vm.count("listen")) {
     config_pool->listen_addrs.push_back(vm["listen"].as<std::string>());
   } else {
     throw "bind_address in config file is necessary";
   }
-  if (vm.count("port")) {
+
+  if (config_pool->port == 0 && vm.count("port")) {
     config_pool->port = vm["port"].as<uint16_t>();
   } else {
     throw "port in config file is necessary";
   }
+  if (vm.count("timeout")) {
+    config_pool->idletimeout = vm["timeout"].as<uint32_t>();
+  }
+  if (vm.count("bindsame")) {
+    config_pool->bindsame = vm["bindsame"].as<bool>();
+  }
+  if (vm.count("filter")) {
+    config_pool->filter = vm["filter"].as<std::string>();
+  }
+  if (vm.count("filterURLs")) {
+    config_pool->filter_url = vm["filterURLs"].as<bool>();
+  }
+  if (vm.count("filterextended")) {
+    config_pool->filter_extended = vm["filterextended"].as<bool>();
+  }
+  if (vm.count("filtercasesensitive")) {
+    config_pool->filter_casesensitive = vm["filtercasesensitive"].as<bool>();
+  }
+
   return 1;
 }
 

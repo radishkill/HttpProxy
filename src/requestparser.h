@@ -23,8 +23,6 @@ class RequestParser {
     }
     return std::make_tuple(kIndeterminate, begin);
   }
-  static bool UrlGetHostAndPort(const std::string& url, std::string& host, uint16_t& port);
-  static void ComposeRequest(const Request& req, std::string& str_req);
   ~RequestParser();
  private:
   /// Handle the next character of input.

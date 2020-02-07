@@ -18,7 +18,7 @@
 					]
 				}
 			],
-			"name" : "",
+			"name" : "Debug",
 			"projects" : 
 			[
 				{
@@ -38,7 +38,7 @@
 				{
 					"directoryIndex" : 0,
 					"id" : "HttpProxy::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-HttpProxy-d8c3032983e8090f944f.json",
+					"jsonFile" : "target-HttpProxy-Debug-3f83509b6682911be90f.json",
 					"name" : "HttpProxy",
 					"projectIndex" : 0
 				}

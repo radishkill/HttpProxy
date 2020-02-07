@@ -4,6 +4,8 @@
 #include <vector>
 #include <string>
 
+#define FILTER_ENABLE
+
 namespace msystem {
 /*
  * Hold all the configuration time information.
@@ -23,10 +25,10 @@ class ConfigPool {
   char *group;
   std::vector<std::string> listen_addrs;
 #ifdef FILTER_ENABLE
-  char *filter;
-  uint32_t filter_url;        /* boolean */
-  uint32_t filter_extended;   /* boolean */
-  uint32_t filter_casesensitive;      /* boolean */
+  std::string filter;
+  uint8_t filter_url;        /* boolean */
+  uint8_t filter_extended;   /* boolean */
+  uint8_t filter_casesensitive;      /* boolean */
 #endif                          /* FILTER_ENABLE */
 #ifdef XTINYPROXY_ENABLE
   uint32_t add_xtinyproxy; /* boolean */
@@ -43,7 +45,7 @@ class ConfigPool {
   char *pidpath;
   uint32_t idletimeout;
   std::string bind_address;
-  uint32_t bindsame;
+  uint8_t bindsame;
 
   /*
        * The configured name to use in the HTTP "Via" header field.

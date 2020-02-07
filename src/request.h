@@ -16,8 +16,7 @@ struct Header {
 struct Request {
   std::string method;
   std::string uri;
-  int http_version_major;
-  int http_version_minor;
+  std::string http_version;
   std::vector<Header> headers;
 };
 }
