@@ -6,6 +6,7 @@
 
 #include "conf.h"
 #include "connhandler.h"
+#include "filter.h"
 
 namespace msystem {
 
@@ -18,6 +19,7 @@ ConnReceiver::ConnReceiver(io_context& io_context_acceptor, io_context& io_conte
 
   if (config_pool_->listen_addrs.empty())
     throw "bind_address in config file is necessary";
+
   std::string address = config_pool_->listen_addrs[0];
   std::string port = std::to_string(config_pool_->port);
 

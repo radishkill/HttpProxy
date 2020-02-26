@@ -3,8 +3,13 @@
 
 #include <iostream>
 #include <tuple>
+#include <algorithm>
+
 
 #include "request.h"
+
+#define HTTP_PORT 80
+#define HTTP_PORT_SSL 443
 
 namespace msystem {
 class RequestParser {
@@ -18,6 +23,16 @@ class RequestParser {
   std::tuple<ResultType, InputIterator> parse(Request& req, InputIterator begin, InputIterator end) {
     while (begin != end) {
       ResultType result = Consume(req, *begin++);
+      if (result == kGood) {
+        Header header;
+        header.name = "Host";
+        auto iter = std::find(req.headers.begin(), req.headers.end(), header);
+        if (iter == req.headers.end()) {
+          result = kBad;
+          return std::make_tuple(result, begin);
+        }
+        SpliteToHostAndPort(iter->value, req);
+      }
       if (result == kGood || result == kBad)
         return std::make_tuple(result, begin);
     }
@@ -27,6 +42,8 @@ class RequestParser {
  private:
   /// Handle the next character of input.
   ResultType Consume(Request& req, char input);
+
+  void SpliteToHostAndPort(const std::string& host, Request& req);
 
   /// Check if a byte is an HTTP character.
   static bool IsChar(int c);

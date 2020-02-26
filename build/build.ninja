@@ -120,8 +120,15 @@ build CMakeFiles/HttpProxy.dir/requestparser.cc.o: CXX_COMPILER__HttpProxy /home
   OBJECT_DIR = CMakeFiles/HttpProxy.dir
   OBJECT_FILE_DIR = CMakeFiles/HttpProxy.dir
 
-build CMakeFiles/HttpProxy.dir/requesthandler.cpp.o: CXX_COMPILER__HttpProxy /home/slayer/workspace/HttpProxy/src/requesthandler.cpp || cmake_object_order_depends_target_HttpProxy
-  DEP_FILE = CMakeFiles/HttpProxy.dir/requesthandler.cpp.o.d
+build CMakeFiles/HttpProxy.dir/requesthandler.cc.o: CXX_COMPILER__HttpProxy /home/slayer/workspace/HttpProxy/src/requesthandler.cc || cmake_object_order_depends_target_HttpProxy
+  DEP_FILE = CMakeFiles/HttpProxy.dir/requesthandler.cc.o.d
+  FLAGS = -g   -std=gnu++14
+  INCLUDES = -I/home/slayer/workspace/HttpProxy/src -I/home/slayer/workspace/HttpProxy/src/utils
+  OBJECT_DIR = CMakeFiles/HttpProxy.dir
+  OBJECT_FILE_DIR = CMakeFiles/HttpProxy.dir
+
+build CMakeFiles/HttpProxy.dir/filter.cc.o: CXX_COMPILER__HttpProxy /home/slayer/workspace/HttpProxy/src/filter.cc || cmake_object_order_depends_target_HttpProxy
+  DEP_FILE = CMakeFiles/HttpProxy.dir/filter.cc.o.d
   FLAGS = -g   -std=gnu++14
   INCLUDES = -I/home/slayer/workspace/HttpProxy/src -I/home/slayer/workspace/HttpProxy/src/utils
   OBJECT_DIR = CMakeFiles/HttpProxy.dir
@@ -135,7 +142,7 @@ build CMakeFiles/HttpProxy.dir/requesthandler.cpp.o: CXX_COMPILER__HttpProxy /ho
 #############################################
 # Link the executable HttpProxy
 
-build HttpProxy: CXX_EXECUTABLE_LINKER__HttpProxy CMakeFiles/HttpProxy.dir/main.cc.o CMakeFiles/HttpProxy.dir/epollrepertory.cc.o CMakeFiles/HttpProxy.dir/epollserver.cc.o CMakeFiles/HttpProxy.dir/conf.cc.o CMakeFiles/HttpProxy.dir/connreceiver.cc.o CMakeFiles/HttpProxy.dir/connmanager.cc.o CMakeFiles/HttpProxy.dir/connhandler.cc.o CMakeFiles/HttpProxy.dir/conninfo.cc.o CMakeFiles/HttpProxy.dir/request.cc.o CMakeFiles/HttpProxy.dir/requestparser.cc.o CMakeFiles/HttpProxy.dir/requesthandler.cpp.o
+build HttpProxy: CXX_EXECUTABLE_LINKER__HttpProxy CMakeFiles/HttpProxy.dir/main.cc.o CMakeFiles/HttpProxy.dir/epollrepertory.cc.o CMakeFiles/HttpProxy.dir/epollserver.cc.o CMakeFiles/HttpProxy.dir/conf.cc.o CMakeFiles/HttpProxy.dir/connreceiver.cc.o CMakeFiles/HttpProxy.dir/connmanager.cc.o CMakeFiles/HttpProxy.dir/connhandler.cc.o CMakeFiles/HttpProxy.dir/conninfo.cc.o CMakeFiles/HttpProxy.dir/request.cc.o CMakeFiles/HttpProxy.dir/requestparser.cc.o CMakeFiles/HttpProxy.dir/requesthandler.cc.o CMakeFiles/HttpProxy.dir/filter.cc.o
   FLAGS = -g
   LINK_LIBRARIES = -lpthread  -lboost_program_options
   OBJECT_DIR = CMakeFiles/HttpProxy.dir
@@ -181,14 +188,14 @@ default all
 #############################################
 # Re-run CMake if any of its inputs changed.
 
-build build.ninja: RERUN_CMAKE | /home/slayer/workspace/HttpProxy/src/CMakeLists.txt /usr/share/cmake-3.16/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.16/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake /usr/share/cmake-3.16/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.16/Modules/CMakeExtraGeneratorDetermineCompilerMacrosAndIncludeDirs.cmake /usr/share/cmake-3.16/Modules/CMakeFindCodeBlocks.cmake /usr/share/cmake-3.16/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.16/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.16/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.16/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.16/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.16/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.16/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.16/Modules/Compiler/GNU.cmake /usr/share/cmake-3.16/Modules/Internal/CMakeCheckCompilerFlag.cmake /usr/share/cmake-3.16/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.16/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.16/Modules/Platform/Linux.cmake /usr/share/cmake-3.16/Modules/Platform/UnixPaths.cmake /usr/share/cmake-3.16/Modules/ProcessorCount.cmake CMakeCache.txt CMakeFiles/3.16.4/CMakeCXXCompiler.cmake CMakeFiles/3.16.4/CMakeSystem.cmake
+build build.ninja: RERUN_CMAKE | /home/slayer/workspace/HttpProxy/src/CMakeLists.txt /usr/share/cmake-3.16/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.16/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake /usr/share/cmake-3.16/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.16/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.16/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.16/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.16/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.16/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.16/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.16/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.16/Modules/Compiler/GNU.cmake /usr/share/cmake-3.16/Modules/Internal/CMakeCheckCompilerFlag.cmake /usr/share/cmake-3.16/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.16/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.16/Modules/Platform/Linux.cmake /usr/share/cmake-3.16/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.16.4/CMakeCXXCompiler.cmake CMakeFiles/3.16.4/CMakeSystem.cmake
   pool = console
 
 
 #############################################
 # A missing CMake input file is not an error.
 
-build /home/slayer/workspace/HttpProxy/src/CMakeLists.txt /usr/share/cmake-3.16/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.16/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake /usr/share/cmake-3.16/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.16/Modules/CMakeExtraGeneratorDetermineCompilerMacrosAndIncludeDirs.cmake /usr/share/cmake-3.16/Modules/CMakeFindCodeBlocks.cmake /usr/share/cmake-3.16/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.16/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.16/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.16/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.16/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.16/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.16/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.16/Modules/Compiler/GNU.cmake /usr/share/cmake-3.16/Modules/Internal/CMakeCheckCompilerFlag.cmake /usr/share/cmake-3.16/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.16/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.16/Modules/Platform/Linux.cmake /usr/share/cmake-3.16/Modules/Platform/UnixPaths.cmake /usr/share/cmake-3.16/Modules/ProcessorCount.cmake CMakeCache.txt CMakeFiles/3.16.4/CMakeCXXCompiler.cmake CMakeFiles/3.16.4/CMakeSystem.cmake: phony
+build /home/slayer/workspace/HttpProxy/src/CMakeLists.txt /usr/share/cmake-3.16/Modules/CMakeCXXInformation.cmake /usr/share/cmake-3.16/Modules/CMakeCheckCompilerFlagCommonPatterns.cmake /usr/share/cmake-3.16/Modules/CMakeCommonLanguageInclude.cmake /usr/share/cmake-3.16/Modules/CMakeGenericSystem.cmake /usr/share/cmake-3.16/Modules/CMakeInitializeConfigs.cmake /usr/share/cmake-3.16/Modules/CMakeLanguageInformation.cmake /usr/share/cmake-3.16/Modules/CMakeSystemSpecificInformation.cmake /usr/share/cmake-3.16/Modules/CMakeSystemSpecificInitialize.cmake /usr/share/cmake-3.16/Modules/Compiler/CMakeCommonCompilerMacros.cmake /usr/share/cmake-3.16/Modules/Compiler/GNU-CXX.cmake /usr/share/cmake-3.16/Modules/Compiler/GNU.cmake /usr/share/cmake-3.16/Modules/Internal/CMakeCheckCompilerFlag.cmake /usr/share/cmake-3.16/Modules/Platform/Linux-GNU-CXX.cmake /usr/share/cmake-3.16/Modules/Platform/Linux-GNU.cmake /usr/share/cmake-3.16/Modules/Platform/Linux.cmake /usr/share/cmake-3.16/Modules/Platform/UnixPaths.cmake CMakeCache.txt CMakeFiles/3.16.4/CMakeCXXCompiler.cmake CMakeFiles/3.16.4/CMakeSystem.cmake: phony
 
 
 #############################################

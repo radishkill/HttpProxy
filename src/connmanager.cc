@@ -1,9 +1,9 @@
 #include "connmanager.h"
 
+
 namespace msystem {
 
 ConnManager::ConnManager() {
-
 }
 
 void ConnManager::Start(std::shared_ptr<ConnHandler> c) {

@@ -9,6 +9,7 @@
 #include "conninfo.h"
 #include "conf.h"
 #include "connreceiver.h"
+#include "filter.h"
 
 namespace po = boost::program_options;
 
@@ -96,9 +97,11 @@ int process_cmd(int ac, char **av) {
   if (vm.count("filterURLs")) {
     config_pool->filter_url = vm["filterURLs"].as<bool>();
   }
+
   if (vm.count("filterextended")) {
     config_pool->filter_extended = vm["filterextended"].as<bool>();
   }
+
   if (vm.count("filtercasesensitive")) {
     config_pool->filter_casesensitive = vm["filtercasesensitive"].as<bool>();
   }
@@ -114,6 +117,10 @@ int main(int argc, char* argv[]) {
     if (!process_cmd(argc, argv)) {
       exit(0);
     }
+
+    msystem::Filter* filter = new msystem::Filter(config_pool->filter);
+    msystem::Filter::SetFilter(filter);
+
 
     io_context io_ctx;
     io_context io_context_acceptor;

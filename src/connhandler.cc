@@ -7,6 +7,8 @@
 
 #include "conf.h"
 #include "connmanager.h"
+#include "response.h"
+#include "filter.h"
 
 namespace msystem {
 
@@ -18,15 +20,16 @@ ConnHandler::ConnHandler(asio::ip::tcp::socket socket,
     : conn_info_(std::move(socket)),
       conn_manager_(manager),
       deadline_(socket.get_executor()),
-      stopped_(false) {
+      stopped_(false),
+      stopping_(false) {
   this->config_pool_ = ConfigPool::GetConfigPool();
 }
 
 void ConnHandler::Run() {
-  auto remote_endpoint = conn_info_.client_socket.remote_endpoint();
-  std::cout << "get connect from\n";
-  std::cout << remote_endpoint.address().to_string() << ":"
-      << remote_endpoint.port() << "\n";
+//  auto remote_endpoint = conn_info_.client_socket.remote_endpoint();
+//  std::cout << "get connect from\n";
+//  std::cout << remote_endpoint.address().to_string() << ":"
+//      << remote_endpoint.port() << "\n";
 
   this->ReadFromClient();
 }
@@ -36,7 +39,7 @@ void ConnHandler::ConnToServer(std::string& host, uint16_t& port) {
   asio::ip::tcp::resolver resolver(conn_info_.server_socket.get_executor());
   asio::ip::tcp::endpoint server_endpoint = *resolver.resolve(host, std::to_string(port)).begin();
   deadline_.expires_after(asio::chrono::seconds(config_pool_->idletimeout));
-  deadline_.async_wait(std::bind(&ConnHandler::CheckDeadline, this));
+  CheckDeadline();
   conn_info_.server_socket.async_connect(server_endpoint,
       [this, self](const boost::system::error_code& ec) {
         if (!ec) {
@@ -44,7 +47,7 @@ void ConnHandler::ConnToServer(std::string& host, uint16_t& port) {
           if (from_cli_request_.method == "CONNECT") {
             conn_info_.connect_method = true;
             std::string str_response;
-            RequestHandler::GetSslResponse(str_response);
+            Response::GetSslResponse(str_response);
             cli_send_buffer_.clear();
             cli_send_buffer_.push_back(boost::asio::buffer(str_response));
             WriteToClient();
@@ -60,7 +63,11 @@ void ConnHandler::ConnToServer(std::string& host, uint16_t& port) {
           }
         } else {
           std::cout << ec.message() << "\n";
-          conn_manager_.Stop(self);
+          std::string str_response;
+          Response::ExpectationFailed(str_response);
+          cli_send_buffer_.push_back(asio::buffer(str_response));
+          stopping_ = true;
+          WriteToClient();
         }
       });
 }
@@ -104,6 +111,8 @@ void ConnHandler::WriteToClient() {
             if (conn_info_.state_ == ConnInfo::kConnToServer) {
               conn_info_.state_ = ConnInfo::kProxySuccess;
             }
+          } else if(stopping_) {
+            conn_manager_.Stop(self);
           } else {
             std::cout << ec.message() << "\n";
             conn_manager_.Stop(self);
@@ -115,7 +124,7 @@ void ConnHandler::ReadFromClient() {
   auto self = shared_from_this();
   conn_info_.client_socket.async_receive(asio::buffer(cli_recv_buffer_),
       [this, self](const boost::system::error_code& ec, std::size_t bytes_transferred) {
-        std::cout << "[tid:" << std::this_thread::get_id() << "] \n";
+        //std::cout << "[tid:" << std::this_thread::get_id() << "] \n";
         if (!ec) {
           if (conn_info_.state_ == ConnInfo::kConnInitial) {
             RequestParser::ResultType result;
@@ -123,33 +132,47 @@ void ConnHandler::ReadFromClient() {
                 from_cli_request_, cli_recv_buffer_.data(), cli_recv_buffer_.data() + bytes_transferred);
             if (result == RequestParser::kGood) {
               //debug
-              std::cout << "url: " << to_ser_request_.uri << "\n";
-              std::cout << "method: " << to_ser_request_.method << "\n";
-              std::cout << "version: " << to_ser_request_.http_version << "\n";
-              for (auto header : to_ser_request_.headers) {
+              std::cout << "url: " << from_cli_request_.uri << "\n";
+              std::cout << "method: " << from_cli_request_.method << "\n";
+              std::cout << "version: " << from_cli_request_.http_version << "\n";
+              for (auto header : from_cli_request_.headers) {
                 std::cout << header.name << ":" << header.value << "\n";
               }
-              //get server host and port
-              std::string address;
-              uint16_t port;
-              Header header;
-              header.name = "Host";
-              auto iter = std::find(from_cli_request_.headers.begin(), from_cli_request_.headers.end(), header);
-              if (iter == from_cli_request_.headers.end()) {
-                conn_info_.client_socket.close();
-                return;
+
+              Filter* filter = Filter::GetFilter();
+              if (filter) {
+                if (!config_pool_->filter_url&&!filter->FilterByDomain(from_cli_request_.host)) {
+                  std::string str_response;
+                  Response::ExpectationFailed(str_response);
+                  cli_send_buffer_.push_back(asio::buffer(str_response));
+                  stopping_ = true;
+                  WriteToClient();
+                  return;
+                } else if (config_pool_->filter_url&&!filter->FilterByUrl(from_cli_request_.uri)) {
+                  std::string str_response;
+                  Response::ExpectationFailed(str_response);
+                  cli_send_buffer_.push_back(asio::buffer(str_response));
+                  stopping_ = true;
+                  WriteToClient();
+                  return;
+                }
               }
-              RequestHandler::UrlGetHostAndPort(iter->value, address, port);
+
+              std::string bind_host;
               if (config_pool_->bindsame) {
                 auto client_endpoint = conn_info_.client_socket.remote_endpoint();
-                address = client_endpoint.address().to_string();
+                bind_host = client_endpoint.address().to_string();
+              } else {
+                bind_host = from_cli_request_.host;
               }
               conn_info_.state_ = ConnInfo::kRequestFromClient;
-              ConnToServer(address, port);
+              ConnToServer(bind_host, from_cli_request_.port);
               ReadFromClient();
             } else if (result == RequestParser::kBad) {
-              //reply_ = reply::stock_reply(reply::bad_request);
-              //do_write();
+              std::string str_response;
+              Response::ExpectationFailed(str_response);
+              cli_send_buffer_.push_back(asio::buffer(str_response));
+              WriteToClient();
             } else {
               ReadFromClient();
             }
@@ -168,16 +191,18 @@ void ConnHandler::ReadFromClient() {
 
 void ConnHandler::CheckDeadline() {
   auto self = shared_from_this();
-  if (stopped_)
-    return;
-  //超时
-  if (deadline_.expiry() <= asio::steady_timer::clock_type::now()) {
-    if (conn_info_.state_ == ConnInfo::kRequestFromClient) {
-      conn_manager_.Stop(self);
-    }
-    deadline_.expires_at(asio::steady_timer::time_point::max());
-  }
-  deadline_.async_wait(std::bind(&ConnHandler::CheckDeadline, this));
+  deadline_.async_wait([this, self](const boost::system::error_code&) {
+        if (stopped_)
+          return;
+        //超时
+        if (deadline_.expiry() <= asio::steady_timer::clock_type::now()) {
+          if (conn_info_.state_ == ConnInfo::kRequestFromClient) {
+            conn_manager_.Stop(self);
+          }
+          deadline_.expires_at(asio::steady_timer::time_point::max());
+        }
+        CheckDeadline();
+      });
 }
 
 void ConnHandler::Stop() {

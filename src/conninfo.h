@@ -21,9 +21,6 @@ class ConnInfo {
   asio::ip::tcp::socket client_socket;
   asio::ip::tcp::socket server_socket;
 
-  Fifo<std::string> client_buffer;
-  Fifo<std::string> server_buffer;
-
   uint8_t connect_method;
   enum State {
     kConnInitial,

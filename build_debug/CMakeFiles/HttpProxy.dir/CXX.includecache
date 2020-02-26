@@ -40,10 +40,6 @@ requestparser.h
 requesthandler.h
 /home/slayer/workspace/HttpProxy/src/requesthandler.h
 
-/home/slayer/workspace/HttpProxy/src/conninfo.cc
-conninfo.h
-/home/slayer/workspace/HttpProxy/src/conninfo.h
-
 /home/slayer/workspace/HttpProxy/src/conninfo.h
 boost/asio.hpp
 -
@@ -82,10 +78,6 @@ boost/asio.hpp
 connmanager.h
 /home/slayer/workspace/HttpProxy/src/connmanager.h
 
-/home/slayer/workspace/HttpProxy/src/epollrepertory.cc
-
-/home/slayer/workspace/HttpProxy/src/epollserver.cc
-
 /home/slayer/workspace/HttpProxy/src/main.cc
 boost/program_options.hpp
 -
@@ -105,12 +97,6 @@ conf.h
 /home/slayer/workspace/HttpProxy/src/conf.h
 connreceiver.h
 /home/slayer/workspace/HttpProxy/src/connreceiver.h
-
-/home/slayer/workspace/HttpProxy/src/request.cc
-request.h
-/home/slayer/workspace/HttpProxy/src/request.h
-iostream
--
 
 /home/slayer/workspace/HttpProxy/src/request.h
 string

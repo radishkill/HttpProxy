@@ -92,11 +92,9 @@ class ConfigPool {
   static ConfigPool* GetConfigPool();
   static int SetConfigPool(ConfigPool* config_pool);
   ~ConfigPool();
-  static ConfigPool *config_pool();
-  static void setConfig_pool(ConfigPool *config_pool);
 
  private:
-  static ConfigPool* config_pool_;
+  static  ConfigPool* config_pool_;
 };
 }
 

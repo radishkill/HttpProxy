@@ -177,6 +177,60 @@ connhandler.cc.s:
 	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/connhandler.cc.s
 .PHONY : connhandler.cc.s
 
+conninfo.o: conninfo.cc.o
+
+.PHONY : conninfo.o
+
+# target to build an object file
+conninfo.cc.o:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/conninfo.cc.o
+.PHONY : conninfo.cc.o
+
+conninfo.i: conninfo.cc.i
+
+.PHONY : conninfo.i
+
+# target to preprocess a source file
+conninfo.cc.i:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/conninfo.cc.i
+.PHONY : conninfo.cc.i
+
+conninfo.s: conninfo.cc.s
+
+.PHONY : conninfo.s
+
+# target to generate assembly for a file
+conninfo.cc.s:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/conninfo.cc.s
+.PHONY : conninfo.cc.s
+
+connmanager.o: connmanager.cc.o
+
+.PHONY : connmanager.o
+
+# target to build an object file
+connmanager.cc.o:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/connmanager.cc.o
+.PHONY : connmanager.cc.o
+
+connmanager.i: connmanager.cc.i
+
+.PHONY : connmanager.i
+
+# target to preprocess a source file
+connmanager.cc.i:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/connmanager.cc.i
+.PHONY : connmanager.cc.i
+
+connmanager.s: connmanager.cc.s
+
+.PHONY : connmanager.s
+
+# target to generate assembly for a file
+connmanager.cc.s:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/connmanager.cc.s
+.PHONY : connmanager.cc.s
+
 connreceiver.o: connreceiver.cc.o
 
 .PHONY : connreceiver.o
@@ -258,6 +312,33 @@ epollserver.cc.s:
 	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/epollserver.cc.s
 .PHONY : epollserver.cc.s
 
+filter.o: filter.cc.o
+
+.PHONY : filter.o
+
+# target to build an object file
+filter.cc.o:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/filter.cc.o
+.PHONY : filter.cc.o
+
+filter.i: filter.cc.i
+
+.PHONY : filter.i
+
+# target to preprocess a source file
+filter.cc.i:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/filter.cc.i
+.PHONY : filter.cc.i
+
+filter.s: filter.cc.s
+
+.PHONY : filter.s
+
+# target to generate assembly for a file
+filter.cc.s:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/filter.cc.s
+.PHONY : filter.cc.s
+
 main.o: main.cc.o
 
 .PHONY : main.o
@@ -285,6 +366,114 @@ main.cc.s:
 	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/main.cc.s
 .PHONY : main.cc.s
 
+request.o: request.cc.o
+
+.PHONY : request.o
+
+# target to build an object file
+request.cc.o:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/request.cc.o
+.PHONY : request.cc.o
+
+request.i: request.cc.i
+
+.PHONY : request.i
+
+# target to preprocess a source file
+request.cc.i:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/request.cc.i
+.PHONY : request.cc.i
+
+request.s: request.cc.s
+
+.PHONY : request.s
+
+# target to generate assembly for a file
+request.cc.s:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/request.cc.s
+.PHONY : request.cc.s
+
+requesthandler.o: requesthandler.cc.o
+
+.PHONY : requesthandler.o
+
+# target to build an object file
+requesthandler.cc.o:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/requesthandler.cc.o
+.PHONY : requesthandler.cc.o
+
+requesthandler.i: requesthandler.cc.i
+
+.PHONY : requesthandler.i
+
+# target to preprocess a source file
+requesthandler.cc.i:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/requesthandler.cc.i
+.PHONY : requesthandler.cc.i
+
+requesthandler.s: requesthandler.cc.s
+
+.PHONY : requesthandler.s
+
+# target to generate assembly for a file
+requesthandler.cc.s:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/requesthandler.cc.s
+.PHONY : requesthandler.cc.s
+
+requestparser.o: requestparser.cc.o
+
+.PHONY : requestparser.o
+
+# target to build an object file
+requestparser.cc.o:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/requestparser.cc.o
+.PHONY : requestparser.cc.o
+
+requestparser.i: requestparser.cc.i
+
+.PHONY : requestparser.i
+
+# target to preprocess a source file
+requestparser.cc.i:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/requestparser.cc.i
+.PHONY : requestparser.cc.i
+
+requestparser.s: requestparser.cc.s
+
+.PHONY : requestparser.s
+
+# target to generate assembly for a file
+requestparser.cc.s:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/requestparser.cc.s
+.PHONY : requestparser.cc.s
+
+response.o: response.cc.o
+
+.PHONY : response.o
+
+# target to build an object file
+response.cc.o:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/response.cc.o
+.PHONY : response.cc.o
+
+response.i: response.cc.i
+
+.PHONY : response.i
+
+# target to preprocess a source file
+response.cc.i:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/response.cc.i
+.PHONY : response.cc.i
+
+response.s: response.cc.s
+
+.PHONY : response.s
+
+# target to generate assembly for a file
+response.cc.s:
+	$(MAKE) -f CMakeFiles/HttpProxy.dir/build.make CMakeFiles/HttpProxy.dir/response.cc.s
+.PHONY : response.cc.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -300,6 +489,12 @@ help:
 	@echo "... connhandler.o"
 	@echo "... connhandler.i"
 	@echo "... connhandler.s"
+	@echo "... conninfo.o"
+	@echo "... conninfo.i"
+	@echo "... conninfo.s"
+	@echo "... connmanager.o"
+	@echo "... connmanager.i"
+	@echo "... connmanager.s"
 	@echo "... connreceiver.o"
 	@echo "... connreceiver.i"
 	@echo "... connreceiver.s"
@@ -309,9 +504,24 @@ help:
 	@echo "... epollserver.o"
 	@echo "... epollserver.i"
 	@echo "... epollserver.s"
+	@echo "... filter.o"
+	@echo "... filter.i"
+	@echo "... filter.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... request.o"
+	@echo "... request.i"
+	@echo "... request.s"
+	@echo "... requesthandler.o"
+	@echo "... requesthandler.i"
+	@echo "... requesthandler.s"
+	@echo "... requestparser.o"
+	@echo "... requestparser.i"
+	@echo "... requestparser.s"
+	@echo "... response.o"
+	@echo "... response.i"
+	@echo "... response.s"
 .PHONY : help
 
 

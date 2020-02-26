@@ -23,7 +23,9 @@ add_executable(${APP_NAME} main.cc
   conninfo.cc
   request.cc
   requestparser.cc
-  requesthandler.cpp
+  requesthandler.cc
+  filter.cc
+  response.cc
   )
 
 target_link_libraries(${APP_NAME}

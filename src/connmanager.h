@@ -7,6 +7,8 @@
 
 namespace msystem {
 
+class Filter;
+
 class ConnManager {
  public:
   ConnManager(const ConnManager&) = delete;

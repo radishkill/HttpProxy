@@ -17,6 +17,8 @@ struct Request {
   std::string method;
   std::string uri;
   std::string http_version;
+  std::string host;
+  uint16_t port;
   std::vector<Header> headers;
 };
 }

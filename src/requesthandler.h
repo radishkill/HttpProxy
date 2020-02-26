@@ -20,8 +20,6 @@ class RequestHandler {
   void HandleRequest(const Request& cli_req, Request& ser_req);
 
 
-  static void UrlGetHostAndPort(const std::string& url, std::string& host, uint16_t& port);
-  static void GetSslResponse(std::string& str_response);
   static void ComposeRequest(const Request& req, std::string& str_req);
 
 

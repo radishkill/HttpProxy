@@ -1,6 +1,5 @@
 #include "requestparser.h"
 
-
 namespace msystem {
 
 RequestParser::RequestParser()
@@ -92,6 +91,7 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
     }
   case kHttpVersionMajor:
     if (input == '.') {
+      req.http_version.push_back(input);
       state_ = kHttpVersionMinorStart;
       return kIndeterminate;
     } else if (IsDigit(input)) {
@@ -193,6 +193,22 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
     return kBad;
   }
 }
+
+void RequestParser::SpliteToHostAndPort(const std::string& host, Request& req) {
+  req.host.clear();
+  std::size_t p;
+  if ((p=host.find(':')) == std::string::npos) {
+    if (req.method == "CONNECT") {
+      req.port = HTTP_PORT_SSL;
+    } else {
+      req.port = HTTP_PORT;
+    }
+  } else {
+    req.port = static_cast<uint16_t>(std::stoi(host.substr(p+1)));
+    req.host = host.substr(0, p);
+  }
+}
+
 
 bool RequestParser::IsChar(int c) {
   return c >= 0 && c <= 127;
