@@ -1,3 +1,0 @@
-/home/slayer/workspace/HttpProxy/build_debug/CMakeFiles/rebuild_cache.dir
-/home/slayer/workspace/HttpProxy/build_debug/CMakeFiles/HttpProxy.dir
-/home/slayer/workspace/HttpProxy/build_debug/CMakeFiles/edit_cache.dir
