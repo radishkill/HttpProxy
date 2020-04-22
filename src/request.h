@@ -20,6 +20,7 @@ struct Request {
   std::string host;
   uint16_t port;
   std::vector<Header> headers;
+  std::string data;
 };
 }
 
