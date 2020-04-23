@@ -139,6 +139,7 @@ void ConnHandler::ReadFromClient() {
                 std::cout << header.name << ":" << header.value << "\n";
               }
 
+              //过滤
               Filter* filter = Filter::GetFilter();
               if (filter) {
                 if (!config_pool_->filter_url&&!filter->FilterByDomain(from_cli_request_.host)) {

@@ -51,12 +51,12 @@ int process_cmd(int ac, char **av) {
   po::notify(vm);
 
   if (vm.count("help") || vm.empty()) {
-    cout << visible << endl;
-    return -1;
+    std::cout << visible << std::endl;
+    std::exit(0);
   }
   if (vm.count("version")) {
     cout << "develop version" << endl;
-    return -1;
+    std::exit(0);
   }
   if (vm.count("listen")) {
     config_pool->listen_addrs.push_back(vm["listen"].as<std::string>());
@@ -115,12 +115,11 @@ int main(int argc, char* argv[]) {
     msystem::ConfigPool::SetConfigPool(config_pool);
 
     if (!process_cmd(argc, argv)) {
-      exit(0);
+      std::exit(0);
     }
 
     msystem::Filter* filter = new msystem::Filter(config_pool->filter);
     msystem::Filter::SetFilter(filter);
-
 
     io_context io_ctx;
     io_context io_context_acceptor;

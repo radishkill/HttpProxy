@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE QtCreatorProject>
-<!-- Written by QtCreator 4.11.2, 2020-04-21T12:36:49. -->
+<!-- Written by QtCreator 4.11.2, 2020-04-23T11:36:38. -->
 <qtcreator>
  <data>
   <variable>EnvironmentId</variable>
@@ -324,7 +324,7 @@
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.DisplayName">HttpProxy</value>
     <value type="QString" key="ProjectExplorer.ProjectConfiguration.Id">CMakeProjectManager.CMakeRunConfiguration.HttpProxy</value>
     <value type="QString" key="ProjectExplorer.RunConfiguration.BuildKey">HttpProxy</value>
-    <value type="QString" key="RunConfiguration.Arguments"></value>
+    <value type="QString" key="RunConfiguration.Arguments">--help</value>
     <value type="bool" key="RunConfiguration.Arguments.multi">false</value>
     <value type="QString" key="RunConfiguration.OverrideDebuggerStartup"></value>
     <value type="bool" key="RunConfiguration.UseCppDebugger">false</value>
