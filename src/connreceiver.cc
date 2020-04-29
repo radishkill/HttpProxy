@@ -10,10 +10,9 @@
 
 namespace msystem {
 
-ConnReceiver::ConnReceiver(io_context& io_context_acceptor, io_context& io_context_handler)
-    : io_context_acceptor_(io_context_acceptor),
-      io_context_handler_(io_context_handler),
-      acceptor_(io_context_acceptor),
+ConnReceiver::ConnReceiver(io_context& io_ctx)
+    : io_ctx_(io_ctx),
+      acceptor_(io_ctx),
       config_pool_(msystem::ConfigPool::GetConfigPool()),
       conn_manager() {
 
@@ -23,7 +22,7 @@ ConnReceiver::ConnReceiver(io_context& io_context_acceptor, io_context& io_conte
   std::string address = config_pool_->listen_addrs[0];
   std::string port = std::to_string(config_pool_->port);
 
-  asio::ip::tcp::resolver resolver(io_context_acceptor);
+  asio::ip::tcp::resolver resolver(io_ctx);
   asio::ip::tcp::endpoint listen_endpoint = *resolver.resolve(address, port).begin();
 
   this->acceptor_.open(listen_endpoint.protocol());
@@ -38,17 +37,14 @@ ConnReceiver::ConnReceiver(io_context& io_context_acceptor, io_context& io_conte
     boost::asio::ip::address addr = boost::asio::ip::make_address((*iter).c_str());
     this->acceptor_.set_option(boost::asio::ip::multicast::join_group(addr));
   }
-  StartAccept();
 }
 
+
+
 int ConnReceiver::StartAccept() {
-  acceptor_.async_accept(io_context_handler_ ,[this](const boost::system::error_code &ec, tcp::socket socket) {
-    std::cout << "[tid:" << std::this_thread::get_id() << "] \n";
-    if (!ec) {
-      conn_manager.Start(std::make_shared<ConnHandler>(std::move(socket), conn_manager));
-    }
-    StartAccept();
-  });
+  conn_handler_ptr_ = std::make_shared<ConnHandler>(conn_manager);
+  acceptor_.async_accept(conn_handler_ptr_->GetConnInfo().client_socket,
+                         boost::bind(&ConnReceiver::HandleClient, this, boost::asio::placeholders::error));
   return 0;
 }
 
@@ -56,6 +52,17 @@ int ConnReceiver::StartAccept() {
 
 ConnReceiver::~ConnReceiver() {
 
+}
+
+void ConnReceiver::HandleClient(const boost::system::error_code &error) {
+  if (!acceptor_.is_open())
+    return;
+  if (!error) {
+    conn_manager.Start(conn_handler_ptr_);
+  } else {
+    std::cout << error.message() << std::endl;
+  }
+  StartAccept();
 }
 
 

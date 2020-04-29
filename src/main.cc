@@ -1,10 +1,12 @@
-#include <boost/program_options.hpp>
-#include <boost/asio.hpp>
-
 #include <iostream>
 #include <iterator>
 #include <fstream>
 #include <vector>
+
+#include <boost/program_options.hpp>
+#include <boost/asio.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/bind.hpp>
 
 #include "conninfo.h"
 #include "conf.h"
@@ -45,6 +47,7 @@ int process_cmd(int ac, char **av) {
       ("filterURLs", po::bool_switch()->default_value(false), "")
       ("filterextended", po::bool_switch()->default_value(false), "")
       ("filtercasesensitive", po::bool_switch()->default_value(false), "")
+      ("startservers", po::value<int>()->default_value(10), "startservers")
       ;
   po::variables_map vm;
   po::store(po::parse_command_line(ac, av, general_options), vm);
@@ -105,6 +108,11 @@ int process_cmd(int ac, char **av) {
   if (vm.count("filtercasesensitive")) {
     config_pool->filter_casesensitive = vm["filtercasesensitive"].as<bool>();
   }
+  if (vm.count("upstream")) {
+    config_pool->upstream = vm["upstream"].as<std::string>();
+  }
+  if (vm.count("startservers")) {
+  }
 
   return 1;
 }
@@ -121,39 +129,22 @@ int main(int argc, char* argv[]) {
     msystem::Filter* filter = new msystem::Filter(config_pool->filter);
     msystem::Filter::SetFilter(filter);
 
-    io_context io_ctx;
-    io_context io_context_acceptor;
-    io_context io_context_handler;
-
-    msystem::ConnReceiver conn_receiver(io_context_acceptor, io_context_handler);
-
-
-    std::thread accept_thread{
-        [&]{
-            std::cout << "[tid:" << std::this_thread::get_id() << "] "
-                         "Acceptor ctx runs here" << std::endl;
-            io_context_acceptor.run();
-        } };
-
-    asio::signal_set break_signals{ io_context_handler, SIGINT };
+    io_context io_acceptor;
+    msystem::ConnReceiver conn_receiver(io_acceptor);
+    asio::signal_set break_signals{io_acceptor, SIGINT };
     break_signals.async_wait(
         [&]( boost::system::error_code ec, int ){
-            if( !ec )
-            {
+            if( !ec ) {
                 std::cout << "Stopping..." << std::endl;
-                io_context_acceptor.stop();
-                io_context_handler.stop();
+                io_acceptor.stop();
             }
         } );
-    std::thread handler_thread{
-        [&]{
-            std::cout << "[tid:" << std::this_thread::get_id() << "] "
-                         "Handler ctx runs here" << std::endl;
-            io_context_handler.run(); } };
+    conn_receiver.StartAccept();
 
-    accept_thread.join();
-    handler_thread.join();
-
+    boost::thread_group tg;
+    for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i)
+            tg.create_thread(boost::bind(&io_context::run, &io_acceptor));
+    tg.join_all();
   } catch (std::exception& e) {
     std::cerr << "error: " << e.what() << "\n";
     return 1;

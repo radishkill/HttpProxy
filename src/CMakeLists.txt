@@ -26,9 +26,13 @@ add_executable(${APP_NAME} main.cc
   requesthandler.cc
   filter.cc
   response.cc
+  utils.cc
+  htmlerror.cc
   )
 
 target_link_libraries(${APP_NAME}
   pthread
-  boost_program_options)
+  boost_program_options.a
+  boost_thread.a
+  )
 

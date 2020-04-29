@@ -1,3 +1,8 @@
 #include "request.h"
 
-#include <iostream>
+
+namespace msystem {
+
+
+
+}

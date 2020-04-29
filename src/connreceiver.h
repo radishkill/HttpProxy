@@ -19,17 +19,18 @@ class ConfigPool;
 
 class ConnReceiver {
  public:
-  ConnReceiver(io_context& io_context_acceptor, io_context& io_context_handler);
+  ConnReceiver(io_context& io_ctx);
   int StartAccept();
   ~ConnReceiver();
  private:
-  io_context& io_context_acceptor_;
-  io_context& io_context_handler_;
+  void HandleClient(const boost::system::error_code& error);
+  io_context& io_ctx_;
   tcp::acceptor acceptor_;
   std::vector<tcp::acceptor*> acceptors_;
   std::vector<tcp::socket*> sockets_;
   ConfigPool* config_pool_;
   ConnManager conn_manager;
+  std::shared_ptr<ConnHandler> conn_handler_ptr_;
 };
 }
 

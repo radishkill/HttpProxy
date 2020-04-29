@@ -2,8 +2,9 @@
 
 namespace msystem {
 
-RequestParser::RequestParser()
-   : state_(kMethodStart) {
+RequestParser::RequestParser(Request &req)
+    : state_(kMethodStart),
+      req_(req) {
 
 }
 
@@ -11,14 +12,14 @@ void RequestParser::Reset() {
   this->state_ = kMethodStart;
 }
 
-RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
+RequestParser::ResultType RequestParser::Consume(char input) {
   switch (state_) {
   case kMethodStart:
     if (!IsChar(input) || IsCtl(input) || IsTspecial(input)) {
       return kBad;
     } else {
       state_ = kMethod;
-      req.method.push_back(input);
+      req_.method.push_back(input);
       return kIndeterminate;
     }
   case kMethod:
@@ -28,7 +29,7 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
     } else if (!IsChar(input) || IsCtl(input) || IsTspecial(input)) {
       return kBad;
     } else {
-      req.method.push_back(input);
+      req_.method.push_back(input);
       return kIndeterminate;
     }
   case kUri:
@@ -38,13 +39,13 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
     } else if (IsCtl(input)) {
       return kBad;
     } else {
-      req.uri.push_back(input);
+      req_.url.push_back(input);
       return kIndeterminate;
     }
   case kHttpVersionH:
     if (input == 'H') {
       state_ = kHttpVersionT1;
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       return kIndeterminate;
     } else {
       return kBad;
@@ -52,7 +53,7 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
   case kHttpVersionT1:
     if (input == 'T') {
       state_ = kHttpVersionT2;
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       return kIndeterminate;
     } else {
       return kBad;
@@ -60,7 +61,7 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
   case kHttpVersionT2:
     if (input == 'T') {
       state_ = kHttpVersionP;
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       return kIndeterminate;
     } else {
       return kBad;
@@ -68,7 +69,7 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
   case kHttpVersionP:
     if (input == 'P') {
       state_ = kHttpVersionSlash;
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       return kIndeterminate;
     } else {
       return kBad;
@@ -76,7 +77,7 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
   case kHttpVersionSlash:
     if (input == '/') {
       state_ = kHttpVersionMajorStart;
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       return kIndeterminate;
     } else {
       return kBad;
@@ -84,25 +85,25 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
   case kHttpVersionMajorStart:
     if (IsDigit(input)) {
       state_ = kHttpVersionMajor;
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       return kIndeterminate;
     } else {
       return kBad;
     }
   case kHttpVersionMajor:
     if (input == '.') {
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       state_ = kHttpVersionMinorStart;
       return kIndeterminate;
     } else if (IsDigit(input)) {
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       return kIndeterminate;
     } else {
       return kBad;
     }
   case kHttpVersionMinorStart:
     if (IsDigit(input)) {
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       state_ = kHttpVersionMinor;
       return kIndeterminate;
     } else {
@@ -113,7 +114,7 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
       state_ = kexpectingNewline1;
       return kIndeterminate;
     } else if (IsDigit(input)) {
-      req.http_version.push_back(input);
+      req_.http_version.push_back(input);
       return kIndeterminate;
     } else {
       return kBad;
@@ -129,14 +130,16 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
     if (input == '\r') {
       state_ = kExpectingNewline3;
       return kIndeterminate;
-    } else if (!req.headers.empty() && (input == ' ' || input == '\t')) {
+    } else if (!req_.headers.empty() && (input == ' ' || input == '\t')) {
       state_ = kHeaderLws;
       return kIndeterminate;
     } else if (!IsChar(input) || IsCtl(input) || IsTspecial(input)) {
       return kBad;
     } else {
-      req.headers.push_back(Header());
-      req.headers.back().name.push_back(input);
+      req_.headers.push_back(Header());
+      if (IsUpper(input))
+        input += 32;
+      req_.headers.back().name.push_back(input);
       state_ = kHeaderName;
       return kIndeterminate;
     }
@@ -150,7 +153,7 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
       return kBad;
     } else {
       state_ = kHeaderValue;
-      req.headers.back().value.push_back(input);
+      req_.headers.back().value.push_back(input);
       return kIndeterminate;
     }
   case kHeaderName:
@@ -160,7 +163,9 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
     } else if (!IsChar(input) || IsCtl(input) || IsTspecial(input)) {
       return kBad;
     } else {
-      req.headers.back().name.push_back(input);
+      if (IsUpper(input))
+        input += 32;
+      req_.headers.back().name.push_back(input);
       return kIndeterminate;
     }
   case kspaceBeforeHeaderValue:
@@ -177,7 +182,7 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
     } else if (IsCtl(input)) {
       return kBad;
     } else {
-      req.headers.back().value.push_back(input);
+      req_.headers.back().value.push_back(input);
       return kIndeterminate;
     }
   case kExpectingNewline2:
@@ -194,20 +199,11 @@ RequestParser::ResultType RequestParser::Consume(Request& req, char input) {
   }
 }
 
-void RequestParser::SpliteToHostAndPort(const std::string& host, Request& req) {
-  req.host.clear();
-  std::size_t p;
-  if ((p=host.find(':')) == std::string::npos) {
-    if (req.method == "CONNECT") {
-      req.port = HTTP_PORT_SSL;
-    } else {
-      req.port = HTTP_PORT;
-    }
-  } else {
-    req.port = static_cast<uint16_t>(std::stoi(host.substr(p+1)));
-    req.host = host.substr(0, p);
-  }
+
+bool RequestParser::IsUpper(int c) {
+  return c >= 'A' && c <= 'Z';
 }
+
 
 
 bool RequestParser::IsChar(int c) {

@@ -4,6 +4,9 @@
 #include <string>
 #include <vector>
 
+#define HTTP_PORT 80
+#define HTTP_PORT_SSL 443
+
 namespace msystem {
 struct Header {
   std::string name;
@@ -15,10 +18,11 @@ struct Header {
 
 struct Request {
   std::string method;
-  std::string uri;
+  std::string raw_url;
+  std::string url;
   std::string http_version;
   std::string host;
-  uint16_t port;
+  int port;
   std::vector<Header> headers;
 };
 }

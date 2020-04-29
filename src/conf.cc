@@ -6,7 +6,7 @@ ConfigPool* ConfigPool::config_pool_ = nullptr;
 
 ConfigPool::ConfigPool()
     : port(0),
-      idletimeout(60) {
+      idletimeout(5) {
 
 }
 

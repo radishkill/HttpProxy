@@ -15,6 +15,7 @@ class ConfigPool {
   std::vector<int> basicauth_list;
   std::string logf_name;
   std::string config_file;
+  std::string upstream;
   uint8_t syslog;    /* boolean */
   uint16_t port;
   char *stathost;

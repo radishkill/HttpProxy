@@ -3,10 +3,11 @@
 
 namespace msystem {
 
-ConnInfo::ConnInfo(asio::ip::tcp::socket c_socket)
-    : client_socket(std::move(c_socket)),
-      server_socket(client_socket.get_executor()),
+ConnInfo::ConnInfo(boost::asio::io_context& io_ctx)
+    : client_socket(io_ctx),
+      server_socket(io_ctx),
       connect_method(false),
+      show_stats(false),
       state_(kConnInitial) {
 }
 

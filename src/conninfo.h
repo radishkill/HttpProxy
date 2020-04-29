@@ -16,12 +16,17 @@ class ConnInfo {
   ConnInfo(const ConnInfo&) = delete;
   ConnInfo& operator=(const ConnInfo&) = delete;
 
-  explicit ConnInfo(asio::ip::tcp::socket c_socket);
+  explicit ConnInfo(boost::asio::io_context& io_ctx);
 
   asio::ip::tcp::socket client_socket;
   asio::ip::tcp::socket server_socket;
 
   uint8_t connect_method;
+  uint8_t show_stats;
+  struct {
+    uint8_t major;
+    uint8_t minor;
+  } protocol;
   enum State {
     kConnInitial,
     kRequestFromClient,
