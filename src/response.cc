@@ -9,7 +9,7 @@ void Response::GetSslResponse(std::string& str_response) {
   str_response += "Proxy-agent: httpproxy/1.0\r\n\r\n";
 }
 
-void Response::EstablishHttpConnection(Request& req, std::string &str_response) {
+void Response::EstablishHttpConnection(HttpProtocol& req, std::string &str_response) {
   str_response = req.method;
   str_response += ' ';
   str_response += req.raw_url;

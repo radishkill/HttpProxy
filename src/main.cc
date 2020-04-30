@@ -8,10 +8,10 @@
 #include <boost/thread/thread.hpp>
 #include <boost/bind.hpp>
 
-#include "conninfo.h"
 #include "conf.h"
-#include "connreceiver.h"
 #include "filter.h"
+#include "common.h"
+#include "proxyserver.h"
 
 namespace po = boost::program_options;
 
@@ -129,22 +129,18 @@ int main(int argc, char* argv[]) {
     msystem::Filter* filter = new msystem::Filter(config_pool->filter);
     msystem::Filter::SetFilter(filter);
 
-    io_context io_acceptor;
-    msystem::ConnReceiver conn_receiver(io_acceptor);
-    asio::signal_set break_signals{io_acceptor, SIGINT };
-    break_signals.async_wait(
-        [&]( boost::system::error_code ec, int ){
-            if( !ec ) {
-                std::cout << "Stopping..." << std::endl;
-                io_acceptor.stop();
-            }
-        } );
-    conn_receiver.StartAccept();
-
-    boost::thread_group tg;
-    for (unsigned i = 0; i < std::thread::hardware_concurrency(); ++i)
-            tg.create_thread(boost::bind(&io_context::run, &io_acceptor));
-    tg.join_all();
+    msystem::ioctx_deque io_contexts;
+    std::deque<msystem::ba::io_service::work> io_context_work;
+    boost::thread_group thr_grp;
+    for (int i = 0; i < 10; ++i) {
+          msystem::io_context_ptr ios(new msystem::ba::io_context);
+          io_contexts.push_back(ios);
+          io_context_work.push_back(msystem::ba::io_service::work(*ios));
+          thr_grp.create_thread(boost::bind(&msystem::ba::io_context::run, ios));
+    }
+    msystem::ProxyServer proxy_server(io_contexts);
+    proxy_server.StartAccept();
+    thr_grp.join_all();
   } catch (std::exception& e) {
     std::cerr << "error: " << e.what() << "\n";
     return 1;

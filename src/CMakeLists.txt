@@ -17,12 +17,9 @@ add_executable(${APP_NAME} main.cc
   epollrepertory.cc
   epollserver.cc
   conf.cc
-  connreceiver.cc
-  connmanager.cc
-  connhandler.cc
-  conninfo.cc
-  request.cc
-  requestparser.cc
+  proxyserver.cc
+  proxyconnction.cc
+  httpparser.cc
   requesthandler.cc
   filter.cc
   response.cc

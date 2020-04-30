@@ -2,8 +2,9 @@
 #define CONN_MANAGER_H
 
 #include <set>
+#include <memory>
 
-#include "connhandler.h"
+#include "proxyconnction.h"
 
 namespace msystem {
 
@@ -18,16 +19,12 @@ class ConnManager {
   ConnManager();
 
   /// Add the specified connection to the manager and start it.
-  void Start(std::shared_ptr<ConnHandler> c);
+  void Start(std::shared_ptr<Connection> c);
 
   /// Stop the specified connection.
-  void Stop(std::shared_ptr<ConnHandler> c);
+  void Stop(std::shared_ptr<Connection> c);
 
-  /// Stop all connections.
-  void StopAll();
  private:
-  /// The managed connections.
-  std::set<std::shared_ptr<ConnHandler>> connections_;
 };
 
 }

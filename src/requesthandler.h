@@ -2,26 +2,23 @@
 #define REQUEST_HANDLER_H
 
 #include <string>
-
-#include "request.h"
-#include "conninfo.h"
+#include "httpparser.h"
 
 namespace msystem {
 
-class ConnHandler;
+class Connection;
 
 /// The common handler for all incoming requests.
 class RequestHandler {
  public:
-  RequestHandler(ConnHandler& conn_handler);
+  RequestHandler(Connection& conn_handler);
   RequestHandler(const RequestHandler&) = delete;
   RequestHandler& operator=(const RequestHandler&) = delete;
 
   int ProcessRequest();
   void ProcessClientHeaders();
 
-  static void ComposeRequest(const Request& req, std::string& str_req);
-
+  static void ComposeRequest(const HttpProtocol& req, std::string& str_req);
 
   ///void handle_request(const request& req, reply& rep);
   ~RequestHandler();
@@ -32,7 +29,7 @@ class RequestHandler {
   int StripReturnPort(std::string& host);
   void RemoveConnectionHeaders();
 
-  ConnHandler& conn_handler_;
+  Connection& conn_;
 
   /// The directory containing the files to be served.
   std::string doc_root_;
