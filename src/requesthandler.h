@@ -23,10 +23,10 @@ class RequestHandler {
   ~RequestHandler();
 
  private:
-  int ExtractUrl(const std::string& url, int default_port);
-  void StripUserNameAndPassword(std::string& host);
-  int StripReturnPort(std::string& host);
-  void RemoveConnectionHeaders();
+//  int ExtractUrl(const std::string& url, int default_port);
+//  void StripUserNameAndPassword(std::string& host);
+//  int StripReturnPort(std::string& host);
+//  void RemoveConnectionHeaders();
 
   Connection& conn_;
 

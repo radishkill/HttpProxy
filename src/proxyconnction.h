@@ -52,6 +52,11 @@ class Connection : public std::enable_shared_from_this<Connection>  {
   void ComposeResponseByProtocol(const HttpProtocol& http, std::string& http_str);
   void GetSslResponse(std::string& http_str);
   void EstablishHttpConnection(HttpProtocol& http, std::string& http_str);
+  int ProcessRequest();
+  int ExtractUrl(const std::string& url, int default_port);
+  void StripUserNameAndPassword(std::string& host);
+  int StripReturnPort(std::string& host);
+  void RemoveConnectionHeaders();
   ba::io_context& io_ctx_;
   ConfigPool* config_pool_;
   std::array<char, 8129> cli_recv_buffer_;
@@ -65,6 +70,7 @@ class Connection : public std::enable_shared_from_this<Connection>  {
   ba::ip::tcp::socket server_socket_;
   ba::ip::tcp::resolver resolver_;
   ba::steady_timer deadline_;
+  uint8_t is_upstream_;
   uint8_t is_server_opened_;
   uint8_t is_proxy_connected_;
   uint8_t is_persistent_;

@@ -26,6 +26,7 @@ Connection::Connection(ba::io_context& io_ctx)
     server_socket_(io_ctx_),
     resolver_(io_ctx_),
     deadline_(io_ctx_),
+    is_upstream_(false),
     is_server_opened_(false),
     is_proxy_connected_(false),
     is_persistent_(false) {
@@ -180,8 +181,12 @@ void Connection::HandleConnect(const boost::system::error_code &ec, ba::ip::tcp:
     Shutdown();
     return;
   }
-  if (!first_time) {
+  if (server_socket_.is_open()) {
     is_server_opened_ = true;
+    if (is_upstream_) {
+      WriteRequestToServer();
+      return;
+    }
     //HTTPS connection
     if (http_.connect_method) {
       std::string response_str;
@@ -232,8 +237,18 @@ void Connection::HandleServerWrite(const boost::system::error_code &ec, size_t l
     Shutdown();
     return;
   }
-  http_parser_.Reset(&server_response_);
-  HandleServerRead(bs::error_code(), 0);
+  ba::async_read(server_socket_, ba::buffer(ser_recv_buffer_), ba::transfer_at_least(1),
+      boost::bind(&Connection::HandleServerProxyRead,
+          shared_from_this(),
+          ba::placeholders::error,
+          ba::placeholders::bytes_transferred));
+  ba::async_read(client_socket_, ba::buffer(cli_recv_buffer_), ba::transfer_at_least(1),
+      boost::bind(&Connection::HandleClientProxyRead,
+          shared_from_this(),
+          ba::placeholders::error,
+          ba::placeholders::bytes_transferred));
+  //http_parser_.Reset(&server_response_);
+  //HandleServerRead(bs::error_code(), 0);
 }
 
 void Connection::HandleServerRead(const boost::system::error_code &ec, size_t len) {
@@ -340,7 +355,7 @@ void Connection::ReadRequest(const bs::error_code& ec, size_t len) {
     for (const auto& h : http_.headers) {
       std::cout << h.first << ":" << h.second << "\n";
     }
-    if (request_handler_.ProcessRequest() < 0) {
+    if (ProcessRequest() < 0) {
       Shutdown();
       return;
     }
@@ -395,8 +410,7 @@ void Connection::ComposeResponseByProtocol(const HttpProtocol &http, std::string
 
 void Connection::GetSslResponse(std::string& http_str) {
   http_str.clear();
-  http_str += "HTTP/1.0 200 Connection established\r\n";
-  http_str += "Proxy-agent: httpproxy/1.0\r\n\r\n";
+  http_str += "HTTP/1.0 200 Connection established\r\n\r\n";
 }
 
 void Connection::EstablishHttpConnection(HttpProtocol& http, std::string& http_str) {
@@ -410,6 +424,141 @@ void Connection::EstablishHttpConnection(HttpProtocol& http, std::string& http_s
   http_str += std::to_string(http.port);
   http_str += "\r\n";
   http_str += "Connection: close\r\n\r\n";
+}
+
+int Connection::ProcessRequest() {
+  std::size_t p;
+  ConfigPool* config_pool = ConfigPool::GetConfigPool();
+
+  //解析协议版本
+  if (http_.http_version.find_first_of("HTTP/") == 0) {
+    std::string& version = http_.http_version;
+    p = version.find_first_of('.');
+    if (p == std::string::npos)
+      return -1;
+    try {
+      http_.protocol_major = std::atoi(version.substr(5, p-5).c_str());
+      http_.protocol_minor = std::atoi(version.substr(p+1).c_str());
+    }  catch (...) {
+      return -1;
+    }
+  } else {
+    return -1;
+  }
+
+  if (http_.raw_url.find("http://") == 0 ||
+      http_.raw_url.find("ftp://") == 0) {
+    std::size_t skiped_type_p = http_.raw_url.find("//") + 2;
+    http_.url = http_.raw_url.substr(skiped_type_p);
+    ExtractUrl(http_.url, HTTP_PORT);
+    http_.connect_method = false;
+  } else if (http_.method == "CONNECT") {
+    ExtractUrl(http_.raw_url, HTTP_PORT_SSL);
+    //need check allowed connect ports
+    http_.connect_method = true;
+  }
+
+  //过滤
+  Filter* filter = Filter::GetFilter();
+  if (filter) {
+    if (!config_pool->filter_url&&!filter->FilterByDomain(http_.host)) {
+      return -1;
+    } else if (config_pool->filter_url&&!filter->FilterByUrl(http_.url)) {
+      return -1;
+    }
+  }
+
+  if (config_pool->bindsame) {
+    auto client_endpoint = client_socket_.remote_endpoint();
+    http_.host = client_endpoint.address().to_string();
+  } else if (!config_pool->upstream.empty()) {
+    is_upstream_ = true;
+    http_.host = config_pool->upstream;
+    http_.port = StripReturnPort(http_.host);
+  }
+  return 0;
+}
+int Connection::ExtractUrl(const std::string& url, int default_port) {
+  std::size_t p;
+
+  p = url.find_first_of('/');
+  if (p == std::string::npos) {
+    http_.host = url;
+    http_.url = "/";
+  } else {
+    http_.host = http_.url.substr(0, p);
+    http_.url = http_.url.substr(p);
+  }
+  StripUserNameAndPassword(http_.host);
+
+  http_.port = StripReturnPort(http_.host);
+  http_.port = (http_.port != 0) ? http_.port : default_port;
+
+  //remove ipv6 surrounding '[' and ']'
+  p = http_.host.find_first_of(']');
+  if (p != std::string::npos && http_.host[0] == '[')
+    http_.host = http_.host.substr(1, http_.host.length() - 2);
+
+  return 0;
+}
+
+void Connection::StripUserNameAndPassword(std::string& host) {
+  std::size_t p;
+  p = host.find_first_of('@');
+  if (p == std::string::npos)
+    return;
+  host = host.substr(0, p);
+}
+
+int Connection::StripReturnPort(std::string& host) {
+  std::size_t p;
+  int port;
+  /* 检查ipv6 */
+  p = host.find_first_of(']');
+  if (p != std::string::npos)
+    return 0;
+
+  p = host.find_first_of(':');
+  if (p == std::string::npos)
+    return 0;
+  ++p;
+  try {
+    port = std::atoi(host.substr(p).c_str());
+  }  catch (...) {
+    return 0;
+  }
+  --p;
+  host = host.substr(0, p);
+  return port;
+}
+
+void Connection::RemoveConnectionHeaders() {
+  static const char* const headers[] = {
+    "connection",
+    "proxy-connection"
+  };
+  int i;
+  const char* ptr;
+  for (i = 0; i != sizeof (headers) / sizeof (char *); i++) {
+    auto iter = http_.headers.find(headers[i]);
+    if (iter == http_.headers.end())
+      continue;
+    int len = iter->second.length();
+    ptr = iter->second.c_str();
+    while ((ptr = std::strpbrk(iter->second.c_str(), "()<>@,;:\\\"/[]?={} \t")))
+      iter->second[ptr - iter->second.c_str()] = '\0';
+    ptr = iter->second.c_str();
+    while (ptr < iter->second.c_str() + len) {
+
+      auto iter1 = http_.headers.find(std::string(ptr));
+      if (iter1 != http_.headers.end())
+        http_.headers.erase(iter1);
+      ptr += std::strlen(ptr)+1;
+      while (ptr < iter->second.c_str() + len && *ptr == '\0')
+        ptr++;
+    }
+    http_.headers.erase(iter);
+  }
 }
 }
 
