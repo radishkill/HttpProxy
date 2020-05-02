@@ -20,13 +20,15 @@ namespace asio = boost::asio;
 
 Connection::Connection(ba::io_context& io_ctx)
   : io_ctx_(io_ctx),
-    http_parser(&http_),
+    http_parser_(&http_),
     request_handler_(*this),
     client_socket_(io_ctx_),
     server_socket_(io_ctx_),
     resolver_(io_ctx_),
     deadline_(io_ctx_),
-    is_opened(false) {
+    is_server_opened_(false),
+    is_proxy_connected_(false),
+    is_persistent_(false) {
   this->config_pool_ = ConfigPool::GetConfigPool();
 }
 
@@ -36,66 +38,56 @@ void Connection::Run() {
 //  std::cout << remote_endpoint.address().to_string() << ":"
 //            << remote_endpoint.port() << "\n";
 //  std::cout << "thread_id:" << std::this_thread::get_id() << std::endl;
-  http_parser.Reset(&http_);
+  Reset();
   ReadRequest(bs::error_code(), 0);
 }
 
-void Connection::WriteToServer() {
-  auto self = shared_from_this();
-//  server_socket_.async_write_some(ser_send_buffer_,
-//      [this, self](const boost::system::error_code& ec, std::size_t bytes_transferred) {
-//    if (ec) {
-////      if (stopped_)
-////        return ;
-//      Shutdown();
-//    }
-//    if (state_ == kConnToServer)
-//      state_ = kProxySuccess;
-//  });
+void Connection::HandleServerProxyWrite(const bs::error_code& ec, size_t len) {
+  if (ec) {
+    Shutdown();
+    return;
+  }
+  ba::async_read(client_socket_, ba::buffer(cli_recv_buffer_), ba::transfer_at_least(1),
+      boost::bind(&Connection::HandleClientProxyRead,
+          shared_from_this(),
+          ba::placeholders::error,
+          ba::placeholders::bytes_transferred));
 }
 
-void Connection::ReadFromServer() {
-  auto self = shared_from_this();
-  ba::async_read(server_socket_, asio::buffer(ser_recv_buffer_),
-        [this, self](const boost::system::error_code& ec, std::size_t len) {
-    if (ec) {
-      Shutdown();
-      return;
-    }
-    std::cout << std::string(ser_recv_buffer_.data(), len) << std::endl;
-  });
+void Connection::HandleServerProxyRead(const bs::error_code& ec, size_t len) {
+  if (ec) {
+    Shutdown();
+    return;
+  }
+  ba::async_write(client_socket_, ba::buffer(ser_recv_buffer_, len),
+      boost::bind(&Connection::HandleClientProxyWrite,
+          shared_from_this(),
+          ba::placeholders::error,
+          ba::placeholders::bytes_transferred));
 }
 
-void Connection::WriteToClient() {
-  auto self = shared_from_this();
-//  client_socket_.async_write_some(cli_send_buffer_,
-//                                            [this, self](const boost::system::error_code& ec, std::size_t) {
-//    if (ec) {
-////      if (stopped_)
-////        return ;
-//      return;
-//    }
-//    if (state_ == kConnToServer) {
-//      state_ = kProxySuccess;
-//    }
-//  });
+void Connection::HandleClientProxyWrite(const bs::error_code& ec, size_t len) {
+  if (ec) {
+    Shutdown();
+    return;
+  }
+  ba::async_read(server_socket_, ba::buffer(ser_recv_buffer_), ba::transfer_at_least(1),
+      boost::bind(&Connection::HandleServerProxyRead,
+          shared_from_this(),
+          ba::placeholders::error,
+          ba::placeholders::bytes_transferred));
 }
 
-void Connection::ReadFromClient() {
-  auto self = shared_from_this();
-//  client_socket_.async_receive(asio::buffer(cli_recv_buffer_),
-//                                         [this, self](const boost::system::error_code& ec, std::size_t bytes_transferred) {
-//    if (ec) {
-////      if (stopped_)
-////        return ;
-//      return ;
-//    }
-//    ser_send_buffer_.clear();
-//    ser_send_buffer_.push_back(boost::asio::buffer(cli_recv_buffer_, bytes_transferred));
-//    WriteToServer();
-//    ReadFromClient();
-
-//  });
+void Connection::HandleClientProxyRead(const bs::error_code& ec, size_t len) {
+  if (ec) {
+    Shutdown();
+    return;
+  }
+  ba::async_write(server_socket_, ba::buffer(cli_recv_buffer_, len),
+      boost::bind(&Connection::HandleServerProxyWrite,
+          shared_from_this(),
+          ba::placeholders::error,
+          ba::placeholders::bytes_transferred));
 }
 
 void Connection::CheckDeadline() {
@@ -104,17 +96,17 @@ void Connection::CheckDeadline() {
   auto self = shared_from_this();
   //超时
   if (deadline_.expiry() <= asio::steady_timer::clock_type::now()) {
-    if (state_ == kRequestFromClient) {
-      std::cout << "connect time out" << std::endl;
-//      Stop(self);
-      return;
-    }
+//    if (state_ == kRequestFromClient) {
+//      std::cout << "connect time out" << std::endl;
+////      Stop(self);
+//      return;
+//    }
     deadline_.expires_at(asio::steady_timer::time_point::max());
   }
   deadline_.async_wait(std::bind(&Connection::CheckDeadline, this));
 }
 void Connection::ConnectToServer() {
-  if (!is_opened) {
+  if (!is_server_opened_) {
     ba::ip::tcp::resolver::query query(http_.host, std::to_string(http_.port));
     resolver_.async_resolve(query,
                     boost::bind(&Connection::HandleResolve, shared_from_this(),
@@ -189,13 +181,16 @@ void Connection::HandleConnect(const boost::system::error_code &ec, ba::ip::tcp:
     return;
   }
   if (!first_time) {
-    is_opened = true;
-//    auto remote_endpoint = server_socket_.remote_endpoint();
-//    std::cout << "get connect from\n";
-//    std::cout << remote_endpoint.address().to_string() << ":"
-//              << remote_endpoint.port() << "\n";
+    is_server_opened_ = true;
+    //HTTPS connection
     if (http_.connect_method) {
-      std::cout << "connect out\n";
+      std::string response_str;
+      GetSslResponse(response_str);
+      ba::async_write(client_socket_, ba::buffer(response_str),
+          boost::bind(&Connection::HandleSslClientWrite,
+              shared_from_this(),
+              ba::placeholders::error,
+              ba::placeholders::bytes_transferred));
       return;
     }
     WriteRequestToServer();
@@ -237,8 +232,7 @@ void Connection::HandleServerWrite(const boost::system::error_code &ec, size_t l
     Shutdown();
     return;
   }
-  ser_data.clear();
-  http_parser.Reset(&server_response);
+  http_parser_.Reset(&server_response_);
   HandleServerRead(bs::error_code(), 0);
 }
 
@@ -248,23 +242,31 @@ void Connection::HandleServerRead(const boost::system::error_code &ec, size_t le
     return;
   }
   HttpParser::ResultType result;
-  std::tie(result, std::ignore) = http_parser.ParseResponse(ser_recv_buffer_.data(), ser_recv_buffer_.data() + len);
+  std::tie(result, std::ignore) = http_parser_.ParseResponse(ser_recv_buffer_.data(), ser_recv_buffer_.data() + len);
   if (result == HttpParser::kGood) {
-    std::cout << "url: " << http_.url << "\n";
-    std::cout << "method: " << http_.method << "\n";
-    std::cout << "version: " << http_.http_version << "\n";
-    for (const auto& h : http_.headers) {
-      std::cout << h.first << ":" << h.second << "\n";
-    }
-    std::cout << http_.data << std::endl;
-    std::cout << http_.data_length << std::endl;
+    std::string response_str;
+    std::string response_connection_str;
+    std::string request_connection_str;
+    auto iter = server_response_.headers.find("connection");
+    if(iter != server_response_.headers.end())
+      response_connection_str = iter->second;
+    iter = http_.headers.find("connection");
+    if(iter != http_.headers.end())
+      request_connection_str = iter->second;
 
-//    std::string response_version = ser_data.substr(ser_data.find("HTTP/")+5, 3);
-//    ba::async_write(client_socket_, ba::buffer(ser_data),
-//        boost::bind(&Connection::HandleClientWrite,
-//            shared_from_this(),
-//            ba::placeholders::error,
-//            ba::placeholders::bytes_transferred));
+    is_persistent_ = (
+          ((http_.http_version == "HTTP/1.1" && request_connection_str != "close") ||
+           (http_.http_version == "HTTP/1.0" && request_connection_str == "keep-alive")) &&
+           ((server_response_.http_version == "HTTP/1.1" && response_connection_str != "close") ||
+           (server_response_.http_version == "HTTP/1.0" && response_connection_str == "keep-alive"))
+          );
+
+    ComposeResponseByProtocol(server_response_, response_str);
+    ba::async_write(client_socket_, ba::buffer(response_str),
+        boost::bind(&Connection::HandleClientWrite,
+            shared_from_this(),
+            ba::placeholders::error,
+            ba::placeholders::bytes_transferred));
   } else if (result == HttpParser::kBad) {
     Shutdown();
     return;
@@ -282,7 +284,27 @@ void Connection::HandleClientWrite(const boost::system::error_code& ec, size_t l
     Shutdown();
     return;
   }
-  std::cout << "wirte success" << len << "\n";
+  is_proxy_connected_ = true;
+  if (is_persistent_) {
+    Run();
+  }
+}
+
+void Connection::HandleSslClientWrite(const boost::system::error_code& ec, size_t len) {
+  if (ec) {
+    Shutdown();
+    return;
+  }
+  ba::async_read(client_socket_, ba::buffer(cli_recv_buffer_), ba::transfer_at_least(1),
+      boost::bind(&Connection::HandleClientProxyRead,
+          shared_from_this(),
+          ba::placeholders::error,
+          ba::placeholders::bytes_transferred));
+  ba::async_read(server_socket_, ba::buffer(ser_recv_buffer_), ba::transfer_at_least(1),
+      boost::bind(&Connection::HandleServerProxyRead,
+          shared_from_this(),
+          ba::placeholders::error,
+            ba::placeholders::bytes_transferred));
 }
 
 
@@ -310,7 +332,7 @@ void Connection::ReadRequest(const bs::error_code& ec, size_t len) {
     return;
   }
   HttpParser::ResultType result;
-  std::tie(result, std::ignore) = http_parser.ParseRequest(cli_recv_buffer_.data(), cli_recv_buffer_.data() + len);
+  std::tie(result, std::ignore) = http_parser_.ParseRequest(cli_recv_buffer_.data(), cli_recv_buffer_.data() + len);
   if (result == HttpParser::kGood) {
     std::cout << "url: " << http_.raw_url << "\n";
     std::cout << "method: " << http_.method << "\n";
@@ -335,6 +357,59 @@ void Connection::ReadRequest(const bs::error_code& ec, size_t len) {
   }
 }
 
-
-
+void Connection::ComposeRequestByProtocol(const HttpProtocol &http, std::string &http_str) {
+  http_str.clear();
+  http_str += http.method;
+  http_str.push_back(' ');
+  http_str += http.raw_url;
+  http_str.push_back(' ');
+  http_str += http.http_version;
+  http_str += "\r\n";
+  for (const auto &h : http.headers) {
+    http_str += h.first;
+    http_str += ": ";
+    http_str += h.second;
+    http_str += "\r\n";
+  }
+  http_str += "\r\n";
+  http_str += http.data;
 }
+
+void Connection::ComposeResponseByProtocol(const HttpProtocol &http, std::string &http_str) {
+  http_str.clear();
+  http_str += http.http_version;
+  http_str.push_back(' ');
+  http_str += http.status_code;
+  http_str.push_back(' ');
+  http_str += http.reason_phrase;
+  http_str += "\r\n";
+  for (const auto &h : http.headers) {
+    http_str += h.first;
+    http_str += ": ";
+    http_str += h.second;
+    http_str += "\r\n";
+  }
+  http_str += "\r\n";
+  http_str += http.data;
+}
+
+void Connection::GetSslResponse(std::string& http_str) {
+  http_str.clear();
+  http_str += "HTTP/1.0 200 Connection established\r\n";
+  http_str += "Proxy-agent: httpproxy/1.0\r\n\r\n";
+}
+
+void Connection::EstablishHttpConnection(HttpProtocol& http, std::string& http_str) {
+  http_str = http.method;
+  http_str += ' ';
+  http_str += http.raw_url;
+  http_str += " HTTP/1.0\r\n";
+  http_str += "Host: ";
+  http_str += http.host;
+  http_str += ':';
+  http_str += std::to_string(http.port);
+  http_str += "\r\n";
+  http_str += "Connection: close\r\n\r\n";
+}
+}
+

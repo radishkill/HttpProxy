@@ -15,16 +15,27 @@ include_directories(
 
 add_executable(${APP_NAME} main.cc
   epollrepertory.cc
+  epollrepertory.h
   epollserver.cc
+  epollserver.h
   conf.cc
+  conf.h
   proxyserver.cc
+  proxyserver.h
   proxyconnction.cc
+  proxyconnction.h
   httpparser.cc
+  httpparser.h
   requesthandler.cc
+  requesthandler.h
   filter.cc
+  filter.h
   response.cc
+  response.h
   utils.cc
+  utils.h
   htmlerror.cc
+  common.h
   )
 
 target_link_libraries(${APP_NAME}

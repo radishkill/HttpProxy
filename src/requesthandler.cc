@@ -42,12 +42,20 @@ int RequestHandler::ProcessRequest() {
     ExtractUrl(conn_.GetHttpProtocol().url, HTTP_PORT);
     conn_.GetHttpProtocol().connect_method = false;
   } else if (conn_.GetHttpProtocol().method == "CONNECT") {
-    ExtractUrl(conn_.GetHttpProtocol().raw_url, HTTP_PORT_SSL);
+    if (conn_.GetHttpProtocol().raw_url.find_first_of("https://") == 0) {
+      std::size_t skiped_type_p = conn_.GetHttpProtocol().raw_url.find_first_of("//") + 2;
+      conn_.GetHttpProtocol().url = conn_.GetHttpProtocol().raw_url.substr(skiped_type_p);
+    } else {
+      conn_.GetHttpProtocol().url = conn_.GetHttpProtocol().raw_url;
+    }
+    ExtractUrl(conn_.GetHttpProtocol().url, HTTP_PORT_SSL);
     //need check allowed connect ports
     conn_.GetHttpProtocol().connect_method = true;
   } else {
-    return -1;
+    ExtractUrl(conn_.GetHttpProtocol().headers.find("host")->second, HTTP_PORT);
+    conn_.GetHttpProtocol().connect_method = false;
   }
+  std::cout << "true host : " << conn_.GetHttpProtocol().host << std::endl;
 
   //过滤
   Filter* filter = Filter::GetFilter();
@@ -85,24 +93,6 @@ void RequestHandler::ProcessClientHeaders() {
   for (i = 0; i != (sizeof (skip_headers) / sizeof (char *)); i++) {
     conn_.GetHttpProtocol().headers.erase(skip_headers[i]);
   }
-}
-
-
-void RequestHandler::ComposeRequest(const HttpProtocol& req, std::string& str_req) {
-  str_req.clear();
-  str_req += req.method;
-  str_req.push_back(' ');
-  str_req += req.raw_url;
-  str_req.push_back(' ');
-  str_req += req.http_version;
-  str_req += "\r\n";
-  for (const auto &h : req.headers) {
-    str_req += h.first;
-    str_req += ": ";
-    str_req += h.second;
-    str_req += "\r\n";
-  }
-  str_req += "\r\n";
 }
 
 

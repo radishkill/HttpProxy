@@ -22,6 +22,8 @@ typedef boost::unordered_map<std::string,std::string> HeadersMap;
 struct HttpProtocol {
   std::string method;
   std::string raw_url;
+  std::string status_code;
+  std::string reason_phrase;
   std::string url;
   std::string http_version;
   std::string host;
@@ -32,6 +34,21 @@ struct HttpProtocol {
   HeadersMap headers;
   std::size_t data_length;
   std::string data;
+  void Reset() {
+    method.clear();
+    raw_url.clear();
+    status_code.clear();
+    reason_phrase.clear();
+    url.clear();
+    http_version.clear();
+    host.clear();
+    port = 0;
+    protocol_major = 0;
+    protocol_minor = 0;
+    headers.clear();
+    data_length = 0;
+    data.clear();
+  }
 };
 
 class HttpParser {
@@ -40,13 +57,12 @@ class HttpParser {
   /// Reset to initial parser state
   void Reset(HttpProtocol* http) {
     http_ = http;
-    this->state_ = kMethodStart;
+    this->state_ = kProtocolStart;
   }
   /// Result of parse.
   enum ResultType { kGood, kBad, kIndeterminate };
   template <typename InputIterator>
   std::tuple<ResultType, InputIterator> ParseRequest(InputIterator begin, InputIterator end) {
-    data_flag = 0;
     while (begin != end) {
       ResultType result = ConsumeRequest(*begin++);
       if (result == kGood || result == kBad)
@@ -56,7 +72,6 @@ class HttpParser {
   }
   template <typename InputIterator>
   std::tuple<ResultType, InputIterator> ParseResponse(InputIterator begin, InputIterator end) {
-    data_flag = 1;
     while (begin != end) {
       ResultType result = ConsumeResponse(*begin++);
       if (result == kGood || result == kBad)
@@ -87,7 +102,7 @@ class HttpParser {
 
   /// The current state of the parser.
   enum State {
-    kMethodStart,
+    kProtocolStart,
     kMethod,
     kUri,
     kHttpVersionH,
@@ -99,6 +114,8 @@ class HttpParser {
     kHttpVersionMajor,
     kHttpVersionMinorStart,
     kHttpVersionMinor,
+    kHttpStatusCode,
+    kHttpReasonPhrase,
     kexpectingNewline1,
     kHeaderLineStart,
     kHeaderLws,
@@ -109,7 +126,6 @@ class HttpParser {
     kExpectingNewline3,
     kHttpData
   } state_;
-  uint8_t data_flag;
   std::string name, value;
   HttpProtocol* http_;
 };

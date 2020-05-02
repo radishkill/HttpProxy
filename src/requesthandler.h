@@ -18,7 +18,6 @@ class RequestHandler {
   int ProcessRequest();
   void ProcessClientHeaders();
 
-  static void ComposeRequest(const HttpProtocol& req, std::string& str_req);
 
   ///void handle_request(const request& req, reply& rep);
   ~RequestHandler();
