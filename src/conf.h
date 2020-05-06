@@ -4,9 +4,15 @@
 #include <vector>
 #include <string>
 
+#include <boost/unordered_map.hpp>
+
 #define FILTER_ENABLE
+#define REVERSE_SUPPORT
 
 namespace msystem {
+
+
+
 /*
  * Hold all the configuration time information.
  */
@@ -21,7 +27,7 @@ class ConfigPool {
   char *stathost;
   uint8_t godaemon;  /* boolean */
   uint8_t quit;      /* boolean */
-  uint32_t maxclients;
+  uint32_t maxthread;
   char *user;
   char *group;
   std::vector<std::string> listen_addrs;
@@ -35,10 +41,12 @@ class ConfigPool {
   uint32_t add_xtinyproxy; /* boolean */
 #endif
 #ifdef REVERSE_SUPPORT
-  struct reversepath *reversepath_list;
-  uint32_t reverseonly;       /* boolean */
-  uint32_t reversemagic;      /* boolean */
-  char *reversebaseurl;
+  //struct reversepath *reversepath_list;
+  boost::unordered_map<std::string, std::string> reversepath_list;
+  uint8_t reverseonly;       /* boolean */
+  uint8_t reversemagic;      /* boolean */
+  std::string reversepath_file;
+  std::string reverse_base_url;
 #endif
 #ifdef UPSTREAM_SUPPORT
   struct upstream *upstream_list;

@@ -36,18 +36,23 @@ int process_cmd(int ac, char **av) {
   po::options_description visible("");
   visible.add(usage).add(general_options).add(support);
 
+  /*
+   * config file description
+   */
   po::options_description config("Configuration");
   config.add_options()
       ("port", po::value<uint16_t>(), "listen port")
       ("listen", po::value<std::string>(), "listen address")
-      ("upstream", po::value<std::string>(), "")
+      ("upstream", po::value<std::string>(&config_pool->upstream), "")
       ("timeout", po::value<uint32_t>()->default_value(60), "")
       ("bindsame", po::bool_switch()->default_value(false), "")
-      ("filter", po::value<std::string>(), "")
+      ("filter", po::value<std::string>(&config_pool->filter), "")
       ("filterURLs", po::bool_switch()->default_value(false), "")
       ("filterextended", po::bool_switch()->default_value(false), "")
       ("filtercasesensitive", po::bool_switch()->default_value(false), "")
-      ("startservers", po::value<int>()->default_value(10), "startservers")
+      ("maxthread", po::value<uint32_t>(&config_pool->maxthread)->default_value(10), "maxthread")
+      ("reversebaseurl", po::value<std::string>(&config_pool->reverse_base_url), "reversebaseurl")
+      ("reversepathfile", po::value<std::string>(&config_pool->reversepath_file), "reversepathfile")
       ;
   po::variables_map vm;
   po::store(po::parse_command_line(ac, av, general_options), vm);
@@ -94,9 +99,6 @@ int process_cmd(int ac, char **av) {
   if (vm.count("bindsame")) {
     config_pool->bindsame = vm["bindsame"].as<bool>();
   }
-  if (vm.count("filter")) {
-    config_pool->filter = vm["filter"].as<std::string>();
-  }
   if (vm.count("filterURLs")) {
     config_pool->filter_url = vm["filterURLs"].as<bool>();
   }
@@ -108,13 +110,49 @@ int process_cmd(int ac, char **av) {
   if (vm.count("filtercasesensitive")) {
     config_pool->filter_casesensitive = vm["filtercasesensitive"].as<bool>();
   }
-  if (vm.count("upstream")) {
-    config_pool->upstream = vm["upstream"].as<std::string>();
-  }
-  if (vm.count("startservers")) {
-  }
-
   return 1;
+}
+void ParseReverseFile() {
+  msystem::ConfigPool* config_pool = msystem::ConfigPool::GetConfigPool();
+  if (config_pool->reversepath_file.empty()) {
+      return;
+  }
+  std::ifstream ifs(config_pool->reversepath_file);
+  if (!ifs.is_open())
+    throw std::string("can not open reverse file: ") + config_pool->reversepath_file;
+  std::array<char, 8129> buff;
+  std::string v1;
+  std::string v2;
+  uint8_t skip = false;
+  uint8_t v2_flag = false;
+  while (!ifs.eof()) {
+    std::streamsize size = ifs.readsome(buff.data(), buff.max_size());
+    if (size == 0) {
+      break;
+    }
+    for (auto iter = buff.begin(); iter != buff.begin()+size; ++iter) {
+      if (v1.empty() && *iter == '#') {
+        skip = true;
+      } else if (v1.empty() && *iter == ' ') {
+
+      } else if (!v1.empty() && *iter == ' ') {
+        v2_flag = true;
+      } else if (*iter == '\n') {
+        if (!skip)
+          config_pool->reversepath_list.insert(std::make_pair(v1, v2));
+        v1.clear();
+        v2.clear();
+        skip = false;
+        v2_flag = false;
+      } else {
+        if (!v2_flag)
+          v1.push_back(*iter);
+        else
+          v2.push_back(*iter);
+      }
+    }
+  }
+  ifs.close();
 }
 
 int main(int argc, char* argv[]) {
@@ -128,6 +166,8 @@ int main(int argc, char* argv[]) {
 
     msystem::Filter* filter = new msystem::Filter(config_pool->filter);
     msystem::Filter::SetFilter(filter);
+
+    ParseReverseFile();
 
     msystem::ioctx_deque io_contexts;
     std::deque<msystem::ba::io_service::work> io_context_work;
