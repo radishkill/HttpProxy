@@ -114,68 +114,18 @@ void Connection::ConnectToServer() {
                           boost::asio::placeholders::error,
                           boost::asio::placeholders::iterator));
   } else {
-    WriteRequestToServer();
+    WriteHTTPRequestToServer();
   }
-
-//  auto self = shared_from_this();
-//  boost::system::error_code ec;
-//  asio::ip::tcp::resolver resolver(io_ctx_);
-//  asio::ip::tcp::endpoint endpoint;
-//  try {
-//     endpoint = *resolver.resolve(http_.host, std::to_string(http_.port), ec).begin();
-//  }  catch (...) {
-//    return -1;
-//  }
-//  //deadline_.expires_after(std::chrono::seconds(config_pool_->idletimeout));
-
-//  server_socket.async_connect(endpoint, [&](const boost::system::error_code& ec) {
-//    if (ec) {
-////      if (stopped_ && !client_socket.is_open())
-////        return ;
-////      std::cout << ec.value() << ":" << ec.message() << std::endl;
-////      std::string str_response;
-////      Response::ExpectationFailed(str_response);
-////      cli_send_buffer_.push_back(asio::buffer(str_response));
-////      client_socket.write_some(asio::buffer(cli_send_buffer_));
-////      conn_manager_.Stop(self);
-//      return ;
-//    }
-//  });
-//  io_ctx_.restart();
-//  io_ctx_.run_for(std::chrono::seconds(config_pool_->idletimeout));
-//  if (!server_socket.is_open())
-//    return -1;
-//  state_ = kConnToServer;
-//  if (http_.connect_method) {
-//    std::string str_response;
-//    Response::GetSslResponse(str_response);
-//    cli_send_buffer_.clear();
-//    cli_send_buffer_.push_back(boost::asio::buffer(str_response));
-//    WriteToClient();
-//    Response::EstablishHttpConnection(http_, str_response);
-//    WriteToServer();
-//    ReadFromClient();
-//    ReadFromServer();
-//  } else {
-//    std::string str_req;
-//    RequestHandler::ComposeRequest(http_, str_req);
-//    ser_send_buffer_.clear();
-//    ser_send_buffer_.push_back(boost::asio::buffer(str_req));
-//    WriteToServer();
-//    ReadFromServer();
-//    ReadFromClient();
-//  }
 }
 void Connection::HandleResolve(const boost::system::error_code &ec, ba::ip::tcp::resolver::iterator endpoint_iterator) {
   if (ec) {
     Shutdown();
     return;
   }
-  const bool first_time = true;
-  HandleConnect(boost::system::error_code(), endpoint_iterator, first_time);
+  HandleConnect(boost::system::error_code(), endpoint_iterator);
 }
 
-void Connection::HandleConnect(const boost::system::error_code &ec, ba::ip::tcp::resolver::iterator endpoint_iterator, const bool first_time) {
+void Connection::HandleConnect(const boost::system::error_code &ec, ba::ip::tcp::resolver::iterator endpoint_iterator) {
   if (ec) {
     std::cout << ec.message() << std::endl;
     Shutdown();
@@ -184,7 +134,7 @@ void Connection::HandleConnect(const boost::system::error_code &ec, ba::ip::tcp:
   if (server_socket_.is_open()) {
     is_server_opened_ = true;
     if (is_upstream_) {
-      WriteRequestToServer();
+      WriteRawRequestToServer();
       return;
     }
     //HTTPS connection
@@ -198,19 +148,29 @@ void Connection::HandleConnect(const boost::system::error_code &ec, ba::ip::tcp:
               ba::placeholders::bytes_transferred));
       return;
     }
-    WriteRequestToServer();
+    WriteHTTPRequestToServer();
   } else if (endpoint_iterator != ba::ip::tcp::resolver::iterator()) {
     ba::ip::tcp::endpoint endpoint = *endpoint_iterator;
     server_socket_.async_connect(endpoint,
         boost::bind(&Connection::HandleConnect, shared_from_this(),
             boost::asio::placeholders::error,
-            ++endpoint_iterator, false));
+            ++endpoint_iterator));
   } else {
     Shutdown();
   }
 }
 
-void Connection::WriteRequestToServer() {
+void Connection::WriteHTTPRequestToServer() {
+  std::string req_buffer;
+  EstablishHttpConnection(http_, req_buffer);
+  ba::async_write(server_socket_, ba::buffer(req_buffer),
+      boost::bind(&Connection::HandleServerWrite,
+          shared_from_this(),
+          ba::placeholders::error,
+                  ba::placeholders::bytes_transferred));
+}
+
+void Connection::WriteRawRequestToServer() {
   std::string req_buffer;
   req_buffer += http_.method;
   req_buffer += " ";
@@ -229,8 +189,9 @@ void Connection::WriteRequestToServer() {
       boost::bind(&Connection::HandleServerWrite,
           shared_from_this(),
           ba::placeholders::error,
-          ba::placeholders::bytes_transferred));
+                  ba::placeholders::bytes_transferred));
 }
+
 
 void Connection::HandleServerWrite(const boost::system::error_code &ec, size_t len) {
   if (ec) {
@@ -247,8 +208,6 @@ void Connection::HandleServerWrite(const boost::system::error_code &ec, size_t l
           shared_from_this(),
           ba::placeholders::error,
           ba::placeholders::bytes_transferred));
-  //http_parser_.Reset(&server_response_);
-  //HandleServerRead(bs::error_code(), 0);
 }
 
 void Connection::HandleServerRead(const boost::system::error_code &ec, size_t len) {
@@ -416,14 +375,14 @@ void Connection::GetSslResponse(std::string& http_str) {
 void Connection::EstablishHttpConnection(HttpProtocol& http, std::string& http_str) {
   http_str = http.method;
   http_str += ' ';
-  http_str += http.raw_url;
+  http_str += http.url;
   http_str += " HTTP/1.0\r\n";
   http_str += "Host: ";
   http_str += http.host;
   http_str += ':';
   http_str += std::to_string(http.port);
   http_str += "\r\n";
-  http_str += "Connection: close\r\n\r\n";
+  http_str += "Connection: Keep-alive\r\n\r\n";
 }
 
 int Connection::ProcessRequest() {
@@ -437,13 +396,28 @@ int Connection::ProcessRequest() {
     if (p == std::string::npos)
       return -1;
     try {
-      http_.protocol_major = std::atoi(version.substr(5, p-5).c_str());
-      http_.protocol_minor = std::atoi(version.substr(p+1).c_str());
+      http_.protocol_major = boost::lexical_cast<uint8_t>(version.substr(5, p-5));
+      http_.protocol_minor = boost::lexical_cast<uint8_t>(version.substr(p+1));
     }  catch (...) {
       return -1;
     }
   } else {
     return -1;
+  }
+
+  if (!config_pool->reversepath_list.empty()) {
+    std::string rewrite_path;
+    for (const auto& v : config_pool->reversepath_list) {
+      p = http_.raw_url.find(v.first);
+      if (p == 0) {
+        rewrite_path = v.second;
+        rewrite_path += http_.raw_url.substr(v.first.length());
+        break;
+      }
+    }
+    if (!rewrite_path.empty()) {
+      http_.raw_url = rewrite_path;
+    }
   }
 
   if (http_.raw_url.find("http://") == 0 ||

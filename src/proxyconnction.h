@@ -23,8 +23,9 @@ class Connection : public std::enable_shared_from_this<Connection>  {
   void CheckDeadline();
   void ConnectToServer();
   void HandleResolve(const bs::error_code& ec, ba::ip::tcp::resolver::iterator endpoint_iterator);
-  void HandleConnect(const bs::error_code& ec, ba::ip::tcp::resolver::iterator endpoint_iterator, const bool first_time);
-  void WriteRequestToServer();
+  void HandleConnect(const bs::error_code& ec, ba::ip::tcp::resolver::iterator endpoint_iterator);
+  void WriteHTTPRequestToServer();
+  void WriteRawRequestToServer();
   void HandleServerWrite(const bs::error_code& ec, size_t len);
   void HandleServerRead(const bs::error_code& ec, size_t len);
   void HandleClientWrite(const bs::error_code& ec, size_t len);

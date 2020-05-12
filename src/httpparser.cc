@@ -194,7 +194,11 @@ HttpParser::ResultType HttpParser::ConsumeRequest(char input) {
     if (input == '\n') {
       auto iter = http_->headers.find("content-length");
       if (iter != http_->headers.end()) {
+        try {
         http_->data_length = boost::lexical_cast<std::size_t>(iter->second);
+        } catch (...) {
+          return kBad;
+        }
         state_ = kHttpData;
         return kIndeterminate;
       } else {
