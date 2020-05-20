@@ -175,7 +175,7 @@ int main(int argc, char* argv[]) {
     for (int i = 0; i < 10; ++i) {
           msystem::io_context_ptr ios(new msystem::ba::io_context);
           io_contexts.push_back(ios);
-          io_context_work.push_back(msystem::ba::io_service::work(*ios));
+          io_context_work.push_back(msystem::ba::io_context::work(*ios));
           thr_grp.create_thread(boost::bind(&msystem::ba::io_context::run, ios));
     }
     msystem::ProxyServer proxy_server(io_contexts);

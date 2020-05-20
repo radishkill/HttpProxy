@@ -49,12 +49,6 @@ int ProxyServer::StartAccept() {
   return 0;
 }
 
-
-
-ProxyServer::~ProxyServer() {
-
-}
-
 void ProxyServer::HandleClient(std::shared_ptr<Connection> new_connection, const boost::system::error_code &error) {
   if (error) {
     std::cout << error.message() << std::endl;
@@ -63,6 +57,8 @@ void ProxyServer::HandleClient(std::shared_ptr<Connection> new_connection, const
   new_connection->Run();
   StartAccept();
 }
+ProxyServer::~ProxyServer() {
 
+}
 
 }
