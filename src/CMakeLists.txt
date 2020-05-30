@@ -22,8 +22,8 @@ add_executable(${APP_NAME} main.cc
   conf.h
   proxyserver.cc
   proxyserver.h
-  proxyconnction.cc
-  proxyconnction.h
+  proxyconnection.cc
+  proxyconnection.h
   httpparser.cc
   httpparser.h
   requesthandler.cc

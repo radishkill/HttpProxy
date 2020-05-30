@@ -4,7 +4,7 @@
 #include <set>
 #include <memory>
 
-#include "proxyconnction.h"
+#include "proxyconnection.h"
 
 namespace msystem {
 

@@ -15,20 +15,32 @@ class ConnManager;
 class Connection : public std::enable_shared_from_this<Connection>  {
  public:
   Connection(ba::io_context& io_ctx);
+  //启动函数
   void Run();
+  //长连接时协议交换处理函数
   void HandleServerProxyWrite(const bs::error_code& ec, size_t len);
   void HandleServerProxyRead(const bs::error_code& ec, size_t len);
   void HandleClientProxyWrite(const bs::error_code& ec, size_t len);
   void HandleClientProxyRead(const bs::error_code& ec, size_t len);
+  //超时检查函数
   void CheckDeadline();
+  //连接远端服务器函数
   void ConnectToServer();
+  //解析IP地址函数
   void HandleResolve(const bs::error_code& ec, ba::ip::tcp::resolver::iterator endpoint_iterator);
+  //处理与远端服务器之间的连接
   void HandleConnect(const bs::error_code& ec, ba::ip::tcp::resolver::iterator endpoint_iterator);
+  //发送HTTP请求报文给远端服务器
   void WriteHTTPRequestToServer();
+  //发送原始HTTP请求给远端服务器
   void WriteRawRequestToServer();
+  //处理服务器写入结果
   void HandleServerWrite(const bs::error_code& ec, size_t len);
+  //处理服务器读取结果
   void HandleServerRead(const bs::error_code& ec, size_t len);
+  //处理客户端写入结果
   void HandleClientWrite(const bs::error_code& ec, size_t len);
+  //处理ssl客户端写入
   void HandleSslClientWrite(const bs::error_code& ec, size_t len);
   HttpProtocol& GetHttpProtocol() {
     return http_;
@@ -36,6 +48,7 @@ class Connection : public std::enable_shared_from_this<Connection>  {
   ba::ip::tcp::socket& Socket() {
       return client_socket_;
   }
+  //重置连接
   void Reset() {
     cli_recv_buffer_.fill('\0');
     ser_recv_buffer_.fill('\0');

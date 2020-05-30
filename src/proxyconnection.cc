@@ -1,4 +1,4 @@
-#include "proxyconnction.h"
+#include "proxyconnection.h"
 
 #include <iostream>
 #include <string>
@@ -306,6 +306,7 @@ void Connection::ReadRequest(const bs::error_code& ec, size_t len) {
     return;
   }
   HttpParser::ResultType result;
+  //使用解析函数解析请求报文
   std::tie(result, std::ignore) = http_parser_.ParseRequest(cli_recv_buffer_.data(), cli_recv_buffer_.data() + len);
   if (result == HttpParser::kGood) {
     std::cout << "url: " << http_.raw_url << "\n";
@@ -314,15 +315,18 @@ void Connection::ReadRequest(const bs::error_code& ec, size_t len) {
     for (const auto& h : http_.headers) {
       std::cout << h.first << ":" << h.second << "\n";
     }
+    //使用处理函数处理请求报文
     if (ProcessRequest() < 0) {
       Shutdown();
       return;
     }
+    //连接上级服务器
     ConnectToServer();
   } else if (result == HttpParser::kBad) {
     Shutdown();
     return;
   } else {
+    //异步读取请求报文内容
     ba::async_read(client_socket_, ba::buffer(cli_recv_buffer_), ba::transfer_at_least(1),
         boost::bind(&Connection::ReadRequest,
             shared_from_this(),
@@ -405,11 +409,13 @@ int Connection::ProcessRequest() {
     return -1;
   }
 
+  //用反向代理地址表内容确认是否反向代理
   if (!config_pool->reversepath_list.empty()) {
     std::string rewrite_path;
     for (const auto& v : config_pool->reversepath_list) {
       p = http_.raw_url.find(v.first);
       if (p == 0) {
+        //找到地址相应地址表 并替换
         rewrite_path = v.second;
         rewrite_path += http_.raw_url.substr(v.first.length());
         break;

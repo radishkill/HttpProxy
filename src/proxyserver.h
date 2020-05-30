@@ -7,7 +7,7 @@
 #include <boost/asio.hpp>
 
 #include "common.h"
-#include "proxyconnction.h"
+#include "proxyconnection.h"
 
 using boost::asio::io_context;
 using boost::asio::ip::tcp;
