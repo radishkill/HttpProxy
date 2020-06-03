@@ -34,6 +34,7 @@ struct HttpProtocol {
   HeadersMap headers;
   std::size_t data_length;
   std::string data;
+  std::vector<std::string> url_list;
   void Reset() {
     method.clear();
     raw_url.clear();

@@ -85,6 +85,7 @@ class Connection : public std::enable_shared_from_this<Connection>  {
   ba::ip::tcp::resolver resolver_;
   ba::steady_timer deadline_;
   uint8_t is_upstream_;
+  uint8_t is_reverse_;
   uint8_t is_server_opened_;
   uint8_t is_proxy_connected_;
   uint8_t is_persistent_;

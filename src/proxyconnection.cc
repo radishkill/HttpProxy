@@ -27,6 +27,7 @@ Connection::Connection(ba::io_context& io_ctx)
     resolver_(io_ctx_),
     deadline_(io_ctx_),
     is_upstream_(false),
+    is_reverse_(false),
     is_server_opened_(false),
     is_proxy_connected_(false),
     is_persistent_(false) {
@@ -72,6 +73,8 @@ void Connection::HandleClientProxyWrite(const bs::error_code& ec, size_t len) {
     Shutdown();
     return;
   }
+//  std::cout << std::endl;
+//  std::cout << ser_recv_buffer_.data() << std::endl;
   ba::async_read(server_socket_, ba::buffer(ser_recv_buffer_), ba::transfer_at_least(1),
       boost::bind(&Connection::HandleServerProxyRead,
           shared_from_this(),
@@ -203,11 +206,7 @@ void Connection::HandleServerWrite(const boost::system::error_code &ec, size_t l
           shared_from_this(),
           ba::placeholders::error,
           ba::placeholders::bytes_transferred));
-  ba::async_read(client_socket_, ba::buffer(cli_recv_buffer_), ba::transfer_at_least(1),
-      boost::bind(&Connection::HandleClientProxyRead,
-          shared_from_this(),
-          ba::placeholders::error,
-          ba::placeholders::bytes_transferred));
+  ReadRequest(bs::error_code(), 0);
 }
 
 void Connection::HandleServerRead(const boost::system::error_code &ec, size_t len) {
@@ -309,6 +308,7 @@ void Connection::ReadRequest(const bs::error_code& ec, size_t len) {
   //使用解析函数解析请求报文
   std::tie(result, std::ignore) = http_parser_.ParseRequest(cli_recv_buffer_.data(), cli_recv_buffer_.data() + len);
   if (result == HttpParser::kGood) {
+    std::cout << "----------------------------------\n";
     std::cout << "url: " << http_.raw_url << "\n";
     std::cout << "method: " << http_.method << "\n";
     std::cout << "version: " << http_.http_version << "\n";
@@ -320,8 +320,10 @@ void Connection::ReadRequest(const bs::error_code& ec, size_t len) {
       Shutdown();
       return;
     }
+
     //连接上级服务器
     ConnectToServer();
+
   } else if (result == HttpParser::kBad) {
     Shutdown();
     return;
@@ -409,23 +411,6 @@ int Connection::ProcessRequest() {
     return -1;
   }
 
-  //用反向代理地址表内容确认是否反向代理
-  if (!config_pool->reversepath_list.empty()) {
-    std::string rewrite_path;
-    for (const auto& v : config_pool->reversepath_list) {
-      p = http_.raw_url.find(v.first);
-      if (p == 0) {
-        //找到地址相应地址表 并替换
-        rewrite_path = v.second;
-        rewrite_path += http_.raw_url.substr(v.first.length());
-        break;
-      }
-    }
-    if (!rewrite_path.empty()) {
-      http_.raw_url = rewrite_path;
-    }
-  }
-
   if (http_.raw_url.find("http://") == 0 ||
       http_.raw_url.find("ftp://") == 0) {
     std::size_t skiped_type_p = http_.raw_url.find("//") + 2;
@@ -436,6 +421,32 @@ int Connection::ProcessRequest() {
     ExtractUrl(http_.raw_url, HTTP_PORT_SSL);
     //need check allowed connect ports
     http_.connect_method = true;
+  } else if (http_.raw_url[0] == '/') {
+    //反向代理
+    is_reverse_ = 1;
+    p = 0;
+    http_.raw_url.push_back('/');
+    for (std::size_t i=1; i<http_.raw_url.length(); ++i) {
+      if (http_.raw_url[i] == '/' && (p != i-1)) {
+        http_.url_list.push_back(http_.raw_url.substr(p+1, i-p-1));
+        p = i;
+      }
+    }
+    for (const auto& v : config_pool->reversepath_list) {
+      if (v.first == http_.url_list[0]) {
+        http_.headers.find("host")->second = v.second;
+        http_.url = v.second;
+        for (auto iter = ++http_.url_list.begin(); iter != http_.url_list.end(); ++iter) {
+          http_.url += '/';
+          http_.url += *iter;
+        }
+        ExtractUrl(http_.url, HTTP_PORT);
+      }
+    }
+    //url为空，表示表中为找到对应项
+    if (http_.url.empty()) {
+      return -1;
+    }
   }
 
   //过滤
