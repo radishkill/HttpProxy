@@ -28,6 +28,4 @@ cmake ../src
 可执行程序需要在Linux系统控制台运行  
 运行时可执行程序同级目录需要保护proxy.cfg基本配置文件，且内容正确。  
 
-#### by radishkill and slark091
-#### phone:18224357612 email:18224357612@163.com qq:1297637273
 
