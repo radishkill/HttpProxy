@@ -60,6 +60,8 @@ class HttpParser {
     http_ = http;
     this->state_ = kProtocolStart;
   }
+
+
   /// Result of parse.
   enum ResultType { kGood, kBad, kIndeterminate };
   template <typename InputIterator>
@@ -71,6 +73,8 @@ class HttpParser {
     }
     return std::make_tuple(kIndeterminate, begin);
   }
+
+
   template <typename InputIterator>
   std::tuple<ResultType, InputIterator> ParseResponse(InputIterator begin, InputIterator end) {
     while (begin != end) {
